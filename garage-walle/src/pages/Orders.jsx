@@ -1,4 +1,3 @@
-// src/pages/Orders.jsx
 import React, { useEffect, useState } from 'react';
 import { db } from '../firebase';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
@@ -35,37 +34,51 @@ export default function Orders() {
 
   return (
     <div className="orders-page">
-      <h1>Orders Page</h1>
+      <div className="orders-title">Orders</div>
       {orders.length === 0 ? (
         <p>No orders available.</p>
       ) : (
-        <ul>
-          {orders.map(order => (
-            <li key={order.id} className="order-item">
-              <span>{order.orderId}</span>
-              <span>{order.Tag}</span>
-              {order.Tag === 'garage' && (
-                <>
-                  <span>{order.garageName}</span>
-                  <span>{order.garageLocation}</span>
-                  <button 
-                    className={`is-surveyor-assigned ${order.isSurveyorAssigned ? 'assigned' : 'not-assigned'}`}
-                    onClick={() => toggleSurveyorAssigned(order.id, order.isSurveyorAssigned)}
-                  >
-                    {order.isSurveyorAssigned ? 'Assigned' : 'Not Assigned'}
-                  </button>
-                  <button 
-                    className="assign-surveyor"
-                    onClick={() => handleAssignSurveyor(order.id)}
-                    disabled={order.isSurveyorAssigned}
-                  >
-                    Assign Surveyor
-                  </button>
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
+        <div className="orders-table">
+          <div className="orders-header">
+            <div className="header-item">Order ID</div>
+            <div className="header-item">Status</div>
+            <div className="header-item">Garage Name</div>
+            <div className="header-item">Garage Location</div>
+            <div className="header-item">Assigning Status</div>
+            <div className="header-item">Assign Surveyor</div> {/* Empty for alignment */}
+          </div>
+          <ul className="orders-list">
+            {orders.map(order => (
+              <li key={order.id} className="order-item">
+                <div className="order-item-cell">{order.orderId}</div>
+                <div className="order-item-cell">{order.Tag}</div>
+                {order.Tag === 'garage' && (
+                  <>
+                    <div className="order-item-cell">{order.garageName}</div>
+                    <div className="order-item-cell">{order.garageLocation}</div>
+                    <div className="order-item-cell">
+                      <button 
+                        className={`is-surveyor-assigned ${order.isSurveyorAssigned ? 'assigned' : 'not-assigned'}`}
+                        onClick={() => toggleSurveyorAssigned(order.id, order.isSurveyorAssigned)}
+                      >
+                        {order.isSurveyorAssigned ? 'Assigned' : 'Not Assigned'}
+                      </button>
+                    </div>
+                    <div className="order-item-cell">
+                      <button 
+                        className="assign-surveyor"
+                        onClick={() => handleAssignSurveyor(order.id)}
+                        disabled={order.isSurveyorAssigned}
+                      >
+                        Assign Surveyor
+                      </button>
+                    </div>
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );

@@ -1,38 +1,108 @@
 .orders-page {
-    padding: 20px;
-  }
-  
-  .order-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
-  }
-  
-  .order-item span {
-    margin-right: 20px;
-  }
-  
-  .is-surveyor-assigned.assigned {
-    color: green;
-  }
-  
-  .is-surveyor-assigned.not-assigned {
-    color: red;
-  }
-  
-  .assign-surveyor {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    cursor: pointer;
-    border-radius: 5px;
-  }
-  
-  .assign-surveyor:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-  }
-  
+  padding: 20px;
+  font-family: 'Roboto', sans-serif;
+  position: relative;
+}
+
+.orders-title {
+  background-color: #ffcba4; 
+  padding: 20px 30px; 
+  border-radius: 15px;
+  position: relative;
+  top: 37px; 
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 20px; 
+  font-weight: bold;
+  z-index: 1;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.orders-table {
+  display: flex;
+  flex-direction: column;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background: white; /* Ensure table is on top of other elements */
+  padding-top: 25px; /* Provide space for the title overlap */
+}
+
+.orders-header {
+  display: flex;
+  background-color: #f8f8f8;
+  font-weight: bold;
+  border-bottom: 1px solid #ddd;
+  padding-top: 25px; /* Provide space for the title overlap */
+}
+
+.header-item {
+  flex: 1;
+  padding: 15px 20px;
+  text-align: center;
+  border-right: 1px solid #ddd;
+}
+
+.header-item:last-child {
+  border-right: none;
+}
+
+.orders-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.order-item {
+  display: flex;
+  border-bottom: 1px solid #ddd;
+}
+
+.order-item:last-child {
+  border-bottom: none;
+}
+
+.order-item-cell {
+  flex: 1;
+  padding: 15px 20px;
+  text-align: center;
+}
+
+.order-item:hover {
+  background-color: #f9f9f9;
+}
+
+.is-surveyor-assigned.assigned {
+  color: green;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+.is-surveyor-assigned.not-assigned {
+  color: red;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+.assign-surveyor {
+  background-color: transparent;
+  color: #007bff;
+  border: 2px solid #007bff;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: color 0.3s ease, border-color 0.3s ease;
+  font-size: 16px;
+}
+
+.assign-surveyor:disabled {
+  color: #ccc;
+  border-color: #ccc;
+  cursor: not-allowed;
+}
+
+.assign-surveyor:hover:not(:disabled) {
+  color: #0056b3;
+  border-color: #0056b3;
+}

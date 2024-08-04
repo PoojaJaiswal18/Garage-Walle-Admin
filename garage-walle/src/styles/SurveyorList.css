@@ -1,21 +1,82 @@
+/* General styles for the surveyor list page */
 .surveyor-list-page {
-    padding: 20px;
-  }
-  
-  .surveyor-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
-  }
-  
-  .assign-surveyor {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    cursor: pointer;
-    border-radius: 5px;
-  }
-  
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  position: relative;
+}
+
+
+.surveyor-title {
+  background-color: #ffcba4; 
+    padding: 20px 30px; 
+    border-radius: 15px;
+    position:relative;
+    top: 50px; 
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 20px; 
+    font-weight: bold;
+    z-index: 1;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
+
+/* List container styling */
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 30px;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin-top: 80px; /* Adjust to ensure the title does not overlap text */
+}
+
+/* Header and item styling */
+.surveyor-header,
+.surveyor-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 20px;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Header styling */
+.surveyor-header {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}
+
+/* Remove border for last item */
+.surveyor-item:last-child {
+  border-bottom: none;
+}
+
+/* Ensure column headers and items align */
+.surveyor-header span,
+.surveyor-item span {
+  flex: 1; /* Ensure columns are evenly distributed */
+  text-align: center; /* Center align text in each column */
+}
+
+/* Styling for buttons */
+.assign-surveyor {
+  background-color: #007bff;
+  color: white;
+  border: 2px solid #007bff;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+  font-size: 16px;
+}
+
+.assign-surveyor:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}
+
+.assign-surveyor:disabled {
+  color: #ccc;
+  background-color: #e0e0e0;
+  border-color: #ccc;
+  cursor: not-allowed;
+}
