@@ -1,0 +1,38 @@
+.orders-page {
+    padding: 20px;
+  }
+  
+  .order-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .order-item span {
+    margin-right: 20px;
+  }
+  
+  .is-surveyor-assigned.assigned {
+    color: green;
+  }
+  
+  .is-surveyor-assigned.not-assigned {
+    color: red;
+  }
+  
+  .assign-surveyor {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  .assign-surveyor:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+  
