@@ -73,13 +73,32 @@ export default function SurveyorList() {
 
   const handleAssign = async (surveyorId) => {
     try {
-      // Update the order document
       const orderDoc = doc(db, 'orders', orderId);
-      await updateDoc(orderDoc, { isSurveyorAssigned: true, surveyorId });
-
-      // Update the surveyor document
       const surveyorDoc = doc(db, 'surveyors', surveyorId);
-      await updateDoc(surveyorDoc, { orderId });
+
+      // Fetch the current state of the order to determine if a surveyor is already assigned
+      const orderSnap = await getDoc(orderDoc);
+      const orderData = orderSnap.data();
+
+      if (orderData.isSurveyorAssigned) {
+        // Remove the existing assignment
+        await updateDoc(orderDoc, {
+          isSurveyorAssigned: false,
+          surveyorId: deleteField()
+        });
+        await updateDoc(surveyorDoc, {
+          orderId: deleteField()
+        });
+      } else {
+        // Assign the new surveyor
+        await updateDoc(orderDoc, {
+          isSurveyorAssigned: true,
+          surveyorId
+        });
+        await updateDoc(surveyorDoc, {
+          orderId
+        });
+      }
 
       navigate('/orders');
     } catch (error) {
@@ -108,7 +127,7 @@ export default function SurveyorList() {
                   className="assign-surveyor"
                   onClick={() => handleAssign(surveyor.id)}
                 >
-                  Assign
+                  {surveyors.find(s => s.id === surveyor.id)?.orderId ? 'Unassign' : 'Assign'}
                 </button>
               </span>
             </li>

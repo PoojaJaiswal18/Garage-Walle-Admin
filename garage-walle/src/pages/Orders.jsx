@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { db } from '../firebase';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteField } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Orders.css';
 
@@ -26,11 +26,35 @@ export default function Orders() {
     navigate(`/surveyors?orderId=${orderId}`);
   };
 
-  const toggleSurveyorAssigned = async (orderId, isAssigned) => {
+  const toggleSurveyorAssigned = async (orderId, isAssigned, surveyorId) => {
     try {
       const orderDoc = doc(db, 'orders', orderId);
-      await updateDoc(orderDoc, { isSurveyorAssigned: !isAssigned });
-      setOrders(prevOrders => prevOrders.map(order => order.id === orderId ? { ...order, isSurveyorAssigned: !isAssigned } : order));
+      const surveyorDoc = doc(db, 'surveyors', surveyorId);
+
+      if (isAssigned) {
+        // Remove surveyor assignment
+        await updateDoc(orderDoc, {
+          isSurveyorAssigned: false,
+          surveyorId: deleteField() // Remove surveyorId field
+        });
+        await updateDoc(surveyorDoc, {
+          orderId: deleteField() // Remove orderId field
+        });
+      } else {
+        // Assign a surveyor
+        await updateDoc(orderDoc, {
+          isSurveyorAssigned: true,
+          surveyorId
+        });
+        await updateDoc(surveyorDoc, {
+          orderId
+        });
+      }
+
+      // Update local state
+      setOrders(prevOrders => prevOrders.map(order =>
+        order.id === orderId ? { ...order, isSurveyorAssigned: !isAssigned } : order
+      ));
     } catch (error) {
       console.error("Error toggling surveyor assigned status:", error);
     }
@@ -63,7 +87,7 @@ export default function Orders() {
                     <div className="order-item-cell">
                       <button 
                         className={`is-surveyor-assigned ${order.isSurveyorAssigned ? 'assigned' : 'not-assigned'}`}
-                        onClick={() => toggleSurveyorAssigned(order.id, order.isSurveyorAssigned)}
+                        onClick={() => toggleSurveyorAssigned(order.id, order.isSurveyorAssigned, order.surveyorId)}
                       >
                         {order.isSurveyorAssigned ? 'Assigned' : 'Not Assigned'}
                       </button>
