@@ -4,12 +4,10 @@ import { collection, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore'
 import { useLocation, useNavigate } from 'react-router-dom';
 import '../styles/SurveyorList.css';
 
-
 function deg2rad(deg) {
   return deg * (Math.PI / 180);
 }
 
-// Function to calculate distance between two coordinates 
 function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
   const R = 6371; // Radius of the Earth in km
   const dLat = deg2rad(lat2 - lat1);
@@ -33,11 +31,9 @@ export default function SurveyorList() {
   useEffect(() => {
     const fetchSurveyors = async () => {
       try {
-        // Fetch surveyors from Firestore
         const querySnapshot = await getDocs(collection(db, 'surveyors'));
         const surveyorsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        // If an orderId is present, fetch the order details and sort the surveyors
         if (orderId) {
           const orderDoc = await getDoc(doc(db, 'orders', orderId));
           if (orderDoc.exists()) {
@@ -77,8 +73,14 @@ export default function SurveyorList() {
 
   const handleAssign = async (surveyorId) => {
     try {
+      // Update the order document
       const orderDoc = doc(db, 'orders', orderId);
-      await updateDoc(orderDoc, { isAssigned: true, surveyorId });
+      await updateDoc(orderDoc, { isSurveyorAssigned: true, surveyorId });
+
+      // Update the surveyor document
+      const surveyorDoc = doc(db, 'surveyors', surveyorId);
+      await updateDoc(surveyorDoc, { orderId });
+
       navigate('/orders');
     } catch (error) {
       console.error("Error assigning surveyor:", error);

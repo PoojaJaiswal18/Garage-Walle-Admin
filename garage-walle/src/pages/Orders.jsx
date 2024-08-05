@@ -27,9 +27,13 @@ export default function Orders() {
   };
 
   const toggleSurveyorAssigned = async (orderId, isAssigned) => {
-    const orderDoc = doc(db, 'orders', orderId);
-    await updateDoc(orderDoc, { isSurveyorAssigned: !isAssigned });
-    setOrders(prevOrders => prevOrders.map(order => order.id === orderId ? { ...order, isSurveyorAssigned: !isAssigned } : order));
+    try {
+      const orderDoc = doc(db, 'orders', orderId);
+      await updateDoc(orderDoc, { isSurveyorAssigned: !isAssigned });
+      setOrders(prevOrders => prevOrders.map(order => order.id === orderId ? { ...order, isSurveyorAssigned: !isAssigned } : order));
+    } catch (error) {
+      console.error("Error toggling surveyor assigned status:", error);
+    }
   };
 
   return (
@@ -45,7 +49,7 @@ export default function Orders() {
             <div className="header-item">Garage Name</div>
             <div className="header-item">Garage Location</div>
             <div className="header-item">Assigning Status</div>
-            <div className="header-item">Assign Surveyor</div> {/* Empty for alignment */}
+            <div className="header-item">Assign Surveyor</div>
           </div>
           <ul className="orders-list">
             {orders.map(order => (
