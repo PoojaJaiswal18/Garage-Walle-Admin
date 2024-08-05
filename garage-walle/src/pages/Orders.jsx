@@ -55,7 +55,7 @@ export default function Orders() {
                 {order.Tag === 'garage' && (
                   <>
                     <div className="order-item-cell">{order.garageName}</div>
-                    <div className="order-item-cell">{order.garageLocation}</div>
+                    <div className="order-item-cell">{order.garageLocation.latitude}, {order.garageLocation.longitude}</div>
                     <div className="order-item-cell">
                       <button 
                         className={`is-surveyor-assigned ${order.isSurveyorAssigned ? 'assigned' : 'not-assigned'}`}
