@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { db } from '../firebase';
-import { collection, getDocs, doc, updateDoc, deleteField } from 'firebase/firestore';
+import { collection, doc, updateDoc, deleteField, onSnapshot } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Orders.css';
 
@@ -9,31 +9,72 @@ export default function Orders() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, 'orders'));
-        const ordersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setOrders(ordersData);
-      } catch (error) {
-        console.error("Error fetching orders:", error);
-      }
+    // Setup real-time listeners for garages and bookings
+    const setupRealTimeListeners = () => {
+      const garagesCollection = collection(db, 'garages');
+
+      // Listener for the garages collection
+      const unsubscribeGarages = onSnapshot(garagesCollection, (garagesSnapshot) => {
+        const allBookingsData = [];
+
+        // Function to setup listener for bookings in each garage
+        const setupBookingsListener = (garageDoc) => {
+          const bookingsCollection = collection(garageDoc.ref, 'bookings');
+
+          // Listener for bookings in the current garage
+          return onSnapshot(bookingsCollection, (bookingsSnapshot) => {
+            const bookingsData = [];
+            bookingsSnapshot.forEach(bookingDoc => {
+              bookingsData.push({
+                id: bookingDoc.id,
+                ...bookingDoc.data(),
+                garageName: garageDoc.data().name,
+                garageLocation: garageDoc.data().location,
+              });
+            });
+
+            // Update the state with the new bookings data
+            setOrders(prevOrders => {
+              // Create a map for easy lookup
+              const ordersMap = new Map(prevOrders.map(order => [order.id, order]));
+
+              // Add new bookings to the map, overwriting existing ones
+              bookingsData.forEach(booking => {
+                ordersMap.set(booking.id, booking);
+              });
+
+              // Convert the map back to an array
+              return Array.from(ordersMap.values());
+            });
+          });
+        };
+
+        // Setup real-time listeners for each garage's bookings
+        const unsubscribeBookingsListeners = garagesSnapshot.docs.map(garageDoc => setupBookingsListener(garageDoc));
+
+        // Cleanup function to remove all listeners
+        return () => {
+          unsubscribeGarages();
+          unsubscribeBookingsListeners.forEach(unsub => unsub());
+        };
+      });
     };
 
-    fetchOrders();
+    setupRealTimeListeners();
   }, []);
 
   const handleAssignSurveyor = (orderId) => {
     navigate(`/surveyors?orderId=${orderId}`);
   };
 
-  const toggleSurveyorAssigned = async (orderId, isAssigned, surveyorId) => {
+  const toggleSurveyorAssigned = async (garageId, bookingId, isAssigned, surveyorId) => {
     try {
-      const orderDoc = doc(db, 'orders', orderId);
+      const bookingDoc = doc(db, 'garages', garageId, 'bookings', bookingId);
       const surveyorDoc = doc(db, 'surveyors', surveyorId);
 
       if (isAssigned) {
         // Remove surveyor assignment
-        await updateDoc(orderDoc, {
+        await updateDoc(bookingDoc, {
           isSurveyorAssigned: false,
           surveyorId: deleteField() // Remove surveyorId field
         });
@@ -42,18 +83,18 @@ export default function Orders() {
         });
       } else {
         // Assign a surveyor
-        await updateDoc(orderDoc, {
+        await updateDoc(bookingDoc, {
           isSurveyorAssigned: true,
           surveyorId
         });
         await updateDoc(surveyorDoc, {
-          orderId
+          orderId: bookingId
         });
       }
 
       // Update local state
       setOrders(prevOrders => prevOrders.map(order =>
-        order.id === orderId ? { ...order, isSurveyorAssigned: !isAssigned } : order
+        order.id === bookingId ? { ...order, isSurveyorAssigned: !isAssigned } : order
       ));
     } catch (error) {
       console.error("Error toggling surveyor assigned status:", error);
@@ -78,31 +119,29 @@ export default function Orders() {
           <ul className="orders-list">
             {orders.map(order => (
               <li key={order.id} className="order-item">
-                <div className="order-item-cell">{order.orderId}</div>
-                <div className="order-item-cell">{order.Tag}</div>
-                {order.Tag === 'garage' && (
-                  <>
-                    <div className="order-item-cell">{order.garageName}</div>
-                    <div className="order-item-cell">{order.garageLocation.latitude}, {order.garageLocation.longitude}</div>
-                    <div className="order-item-cell">
-                      <button 
-                        className={`is-surveyor-assigned ${order.isSurveyorAssigned ? 'assigned' : 'not-assigned'}`}
-                        onClick={() => toggleSurveyorAssigned(order.id, order.isSurveyorAssigned, order.surveyorId)}
-                      >
-                        {order.isSurveyorAssigned ? 'Assigned' : 'Not Assigned'}
-                      </button>
-                    </div>
-                    <div className="order-item-cell">
-                      <button 
-                        className="assign-surveyor"
-                        onClick={() => handleAssignSurveyor(order.id)}
-                        disabled={order.isSurveyorAssigned}
-                      >
-                        Assign Surveyor
-                      </button>
-                    </div>
-                  </>
-                )}
+                <div className="order-item-cell">{order.id}</div>
+                <div className="order-item-cell">{order.isSurveyorAssigned ? 'Assigned' : 'Not Assigned'}</div>
+                <div className="order-item-cell">{order.garageName}</div>
+                <div className="order-item-cell">
+                  {order.garageLocation.latitude}, {order.garageLocation.longitude}
+                </div>
+                <div className="order-item-cell">
+                  <button 
+                    className={`is-surveyor-assigned ${order.isSurveyorAssigned ? 'assigned' : 'not-assigned'}`}
+                    onClick={() => toggleSurveyorAssigned(order.garageId, order.id, order.isSurveyorAssigned, order.surveyorId)}
+                  >
+                    {order.isSurveyorAssigned ? 'Assigned' : 'Not Assigned'}
+                  </button>
+                </div>
+                <div className="order-item-cell">
+                  <button 
+                    className="assign-surveyor"
+                    onClick={() => handleAssignSurveyor(order.id)}
+                    disabled={order.isSurveyorAssigned}
+                  >
+                    Assign Surveyor
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
@@ -111,3 +150,4 @@ export default function Orders() {
     </div>
   );
 }
+

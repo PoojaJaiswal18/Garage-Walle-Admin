@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { db } from '../firebase';
-import { collection, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore';
+import { collection, doc, onSnapshot, getDoc, updateDoc, deleteField } from 'firebase/firestore';
 import { useLocation, useNavigate } from 'react-router-dom';
 import '../styles/SurveyorList.css';
 
@@ -25,55 +25,58 @@ export default function SurveyorList() {
   const [surveyors, setSurveyors] = useState([]);
   const location = useLocation();
   const orderId = new URLSearchParams(location.search).get('orderId');
+  const garageId = new URLSearchParams(location.search).get('garageId');
   const [garageLocation, setGarageLocation] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchSurveyors = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, 'surveyors'));
-        const surveyorsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-        if (orderId) {
-          const orderDoc = await getDoc(doc(db, 'orders', orderId));
-          if (orderDoc.exists()) {
-            const orderData = orderDoc.data();
-            setGarageLocation(orderData.garageLocation);
-
-            if (orderData.garageLocation) {
-              surveyorsData.sort((a, b) => {
-                const distanceA = getDistanceFromLatLonInKm(
-                  orderData.garageLocation.latitude,
-                  orderData.garageLocation.longitude,
-                  a.location.latitude,
-                  a.location.longitude
-                );
-                const distanceB = getDistanceFromLatLonInKm(
-                  orderData.garageLocation.latitude,
-                  orderData.garageLocation.longitude,
-                  b.location.latitude,
-                  b.location.longitude
-                );
-                return distanceA - distanceB;
-              });
-            }
-          } else {
-            console.error("Order does not exist");
-          }
-        }
-
-        setSurveyors(surveyorsData);
-      } catch (error) {
-        console.error("Error fetching surveyors:", error);
+    const unsubscribeSurveyors = onSnapshot(collection(db, 'surveyors'), (querySnapshot) => {
+      const surveyorsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      if (garageLocation) {
+        surveyorsData.sort((a, b) => {
+          const distanceA = getDistanceFromLatLonInKm(
+            garageLocation.latitude,
+            garageLocation.longitude,
+            a.location.latitude,
+            a.location.longitude
+          );
+          const distanceB = getDistanceFromLatLonInKm(
+            garageLocation.latitude,
+            garageLocation.longitude,
+            b.location.latitude,
+            b.location.longitude
+          );
+          return distanceA - distanceB;
+        });
       }
-    };
+      setSurveyors(surveyorsData);
+    });
 
-    fetchSurveyors();
-  }, [orderId]);
+    return () => unsubscribeSurveyors();
+  }, [garageLocation]);
+
+  useEffect(() => {
+    if (orderId && garageId) {
+      const unsubscribeOrder = onSnapshot(doc(db, `garages/${garageId}/bookings`, orderId), async (orderDoc) => {
+        if (orderDoc.exists()) {
+          const orderData = orderDoc.data();
+          const garageDoc = await getDoc(doc(db, 'garages', garageId));
+          if (garageDoc.exists()) {
+            const garageData = garageDoc.data();
+            setGarageLocation(garageData.location);
+          }
+        } else {
+          console.error("Order does not exist");
+        }
+      });
+
+      return () => unsubscribeOrder();
+    }
+  }, [orderId, garageId]);
 
   const handleAssign = async (surveyorId) => {
     try {
-      const orderDoc = doc(db, 'orders', orderId);
+      const orderDoc = doc(db, `garages/${garageId}/bookings`, orderId);
       const surveyorDoc = doc(db, 'surveyors', surveyorId);
 
       // Fetch the current state of the order to determine if a surveyor is already assigned
@@ -127,7 +130,7 @@ export default function SurveyorList() {
                   className="assign-surveyor"
                   onClick={() => handleAssign(surveyor.id)}
                 >
-                  {surveyors.find(s => s.id === surveyor.id)?.orderId ? 'Unassign' : 'Assign'}
+                  {surveyor.orderId ? 'Unassign' : 'Assign'}
                 </button>
               </span>
             </li>
@@ -137,3 +140,4 @@ export default function SurveyorList() {
     </div>
   );
 }
+
