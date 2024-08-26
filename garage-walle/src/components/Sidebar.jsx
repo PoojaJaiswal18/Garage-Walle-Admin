@@ -1,8 +1,7 @@
-// src/components/Sidebar.jsx
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './Sidebar.css'; // Import CSS
-import { FaHome, FaListUl, FaClipboardList, FaMoneyBillWave } from 'react-icons/fa'; // React Icons
+import { FaHome, FaListUl, FaClipboardList, FaMoneyBillWave, FaCheckCircle } from 'react-icons/fa'; // React Icons
 
 export default function Sidebar() {
   const [expanded, setExpanded] = useState(true);
@@ -19,6 +18,7 @@ export default function Sidebar() {
           <SidebarItem to="/" icon={<FaHome />} text="Home" expanded={expanded} />
           <SidebarItem to="/orders" icon={<FaListUl />} text="Orders" expanded={expanded} />
           <SidebarItem to="/surveyors" icon={<FaClipboardList />} text="Surveyor List" expanded={expanded} />
+          <SidebarItem to="/approvals" icon={<FaCheckCircle />} text="Approvals" expanded={expanded} />
           <SidebarItem to="/billing" icon={<FaMoneyBillWave />} text="Billing" expanded={expanded} />
         </ul>
       </nav>

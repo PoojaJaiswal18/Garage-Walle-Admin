@@ -1,0 +1,110 @@
+.approvals-page {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+  
+  .approvals-title {
+    background-color: #ffcba4;
+    padding: 20px 30px;
+    border-radius: 15px;
+    position: relative;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 24px;
+    font-weight: bold;
+    z-index: 1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+  
+  .approvals-table {
+    margin-top: 80px;
+    background-color: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+  
+  .approvals-header,
+  .approval-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .approvals-header {
+    background-color: #f4f4f4;
+    font-weight: bold;
+  }
+  
+  .approval-item:last-child {
+    border-bottom: none;
+  }
+  
+  .header-item,
+  .approval-item-cell {
+    flex: 1;
+    text-align: center;
+  }
+  
+  .no-approvals {
+    text-align: center;
+    font-size: 18px;
+    color: #888;
+    padding: 20px;
+  }
+  
+  .approvals-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .approvals-header {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    background-color: #f8f8f8;
+    border-bottom: 2px solid #ddd;
+    padding: 10px;
+  }
+  
+  .header-item {
+    padding: 10px;
+    font-weight: bold;
+    text-align: left;
+  }
+  
+  .approvals-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .approval-item {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    border-bottom: 1px solid #ddd;
+    padding: 10px;
+  }
+  
+  .approval-item-cell {
+    padding: 10px;
+    text-align: left;
+  }
+  
+  .approve-button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .approve-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+  
