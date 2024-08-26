@@ -5,42 +5,42 @@
   position: relative;
 }
 
-
-.surveyor-title {
-  background-color: #ffcba4; 
-    padding: 20px 30px; 
-    border-radius: 15px;
-    position:relative;
-    top: 50px; 
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 20px; 
-    font-weight: bold;
-    z-index: 1;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
+/* Title styling */
+.surveyors-title {
+  background-color: #ffcba4;
+  padding: 20px 30px;
+  border-radius: 15px;
+  position: relative;
+  top: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 24px;
+  font-weight: bold;
+  z-index: 1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
 
 /* List container styling */
-ul {
-  list-style: none;
-  padding: 0;
-  margin: 30px;
+.surveyors-table {
+  margin-top: 80px;
+  background-color: #ffffff;
   border-radius: 15px;
-  overflow: hidden;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  margin-top: 80px; /* Adjust to ensure the title does not overlap text */
+  overflow: hidden;
 }
 
 /* Header and item styling */
-.surveyor-header,
+.surveyors-header,
 .surveyor-item {
   display: flex;
   align-items: center;
-  padding: 20px 20px;
+  padding: 15px 20px;
   border-bottom: 1px solid #ddd;
 }
 
 /* Header styling */
-.surveyor-header {
+.surveyors-header {
   background-color: #f4f4f4;
   font-weight: bold;
 }
@@ -51,14 +51,14 @@ ul {
 }
 
 /* Ensure column headers and items align */
-.surveyor-header span,
-.surveyor-item span {
-  flex: 1; /* Ensure columns are evenly distributed */
-  text-align: center; /* Center align text in each column */
+.header-item,
+.surveyor-item-cell {
+  flex: 1;
+  text-align: center;
 }
 
 /* Styling for buttons */
-.assign-surveyor {
+.assign-button {
   background-color: #007bff;
   color: white;
   border: 2px solid #007bff;
@@ -69,14 +69,22 @@ ul {
   font-size: 16px;
 }
 
-.assign-surveyor:hover {
+.assign-button:hover {
   background-color: #0056b3;
   border-color: #0056b3;
 }
 
-.assign-surveyor:disabled {
+.assign-button:disabled {
   color: #ccc;
   background-color: #e0e0e0;
   border-color: #ccc;
   cursor: not-allowed;
+}
+
+/* No surveyors available message */
+.no-surveyors {
+  text-align: center;
+  font-size: 18px;
+  color: #888;
+  padding: 20px;
 }

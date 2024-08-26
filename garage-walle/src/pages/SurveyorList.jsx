@@ -13,26 +13,27 @@ function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
   const dLat = deg2rad(lat2 - lat1);
   const dLon = deg2rad(lon2 - lon1);
   const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.sin(dLat / 2) * Math.sin(dLon / 2) +
     Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
     Math.sin(dLon / 2) * Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distance = R * c;
-  return distance;
+  return R * c;
 }
 
 export default function SurveyorList() {
   const [surveyors, setSurveyors] = useState([]);
   const location = useLocation();
+  const navigate = useNavigate();
   const orderId = new URLSearchParams(location.search).get('orderId');
   const garageId = new URLSearchParams(location.search).get('garageId');
   const [garageLocation, setGarageLocation] = useState(null);
-  const navigate = useNavigate();
+  const showDistance = Boolean(orderId && garageId);
 
   useEffect(() => {
     const unsubscribeSurveyors = onSnapshot(collection(db, 'surveyors'), (querySnapshot) => {
       const surveyorsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      if (garageLocation) {
+
+      if (garageLocation && showDistance) {
         surveyorsData.sort((a, b) => {
           const distanceA = getDistanceFromLatLonInKm(
             garageLocation.latitude,
@@ -49,11 +50,12 @@ export default function SurveyorList() {
           return distanceA - distanceB;
         });
       }
+
       setSurveyors(surveyorsData);
     });
 
     return () => unsubscribeSurveyors();
-  }, [garageLocation]);
+  }, [garageLocation, showDistance]);
 
   useEffect(() => {
     if (orderId && garageId) {
@@ -79,27 +81,24 @@ export default function SurveyorList() {
       const orderDoc = doc(db, `garages/${garageId}/bookings`, orderId);
       const surveyorDoc = doc(db, 'surveyors', surveyorId);
 
-      // Fetch the current state of the order to determine if a surveyor is already assigned
       const orderSnap = await getDoc(orderDoc);
       const orderData = orderSnap.data();
 
       if (orderData.isSurveyorAssigned) {
-        // Remove the existing assignment
         await updateDoc(orderDoc, {
           isSurveyorAssigned: false,
-          surveyorId: deleteField()
+          surveyorId: deleteField(),
         });
         await updateDoc(surveyorDoc, {
-          orderId: deleteField()
+          ongoingBookings: deleteField(),
         });
       } else {
-        // Assign the new surveyor
         await updateDoc(orderDoc, {
           isSurveyorAssigned: true,
-          surveyorId
+          surveyorId,
         });
         await updateDoc(surveyorDoc, {
-          orderId
+          ongoingBookings: [orderId],
         });
       }
 
@@ -110,34 +109,40 @@ export default function SurveyorList() {
   };
 
   return (
-    <div className="surveyor-list-page">
-      <div className="surveyor-title">Surveyor List</div>
-      <ul>
-        <li className="surveyor-header">
-          <span>Name</span>
-          <span>Location</span>
-          <span>Assign</span>
-        </li>
-        {surveyors.length === 0 ? (
-          <li>No surveyors available.</li>
-        ) : (
-          surveyors.map(surveyor => (
-            <li key={surveyor.id} className="surveyor-item">
-              <span>{surveyor.name}</span>
-              <span>{`${surveyor.location.latitude}, ${surveyor.location.longitude}`}</span>
-              <span>
-                <button
-                  className="assign-surveyor"
-                  onClick={() => handleAssign(surveyor.id)}
-                >
-                  {surveyor.orderId ? 'Unassign' : 'Assign'}
-                </button>
-              </span>
-            </li>
-          ))
-        )}
-      </ul>
+    <div className="surveyor-list">
+      <div className="surveyors-title">Surveyors List</div>
+      {surveyors.length === 0 ? (
+        <p>No surveyors available.</p>
+      ) : (
+        <div className="surveyors-table">
+          <div className="surveyors-header">
+            <div className="header-item">Surveyor Name</div>
+            <div className="header-item">Location</div>
+            {showDistance && <div className="header-item">Distance</div>}
+            <div className="header-item">Assign</div>
+          </div>
+          <ul className="surveyors-list">
+            {surveyors.map(surveyor => (
+              <li key={surveyor.id} className="surveyor-item">
+                <div className="surveyor-item-cell">{surveyor.name}</div>
+                <div className="surveyor-item-cell">
+                  {surveyor.location.latitude}, {surveyor.location.longitude}
+                </div>
+                {showDistance && (
+                  <div className="surveyor-item-cell">
+                    {garageLocation ? `${getDistanceFromLatLonInKm(garageLocation.latitude, garageLocation.longitude, surveyor.location.latitude, surveyor.location.longitude).toFixed(2)} km` : 'N/A'}
+                  </div>
+                )}
+                <div className="surveyor-item-cell">
+                  <button className="assign-button" onClick={() => handleAssign(surveyor.id)}>
+                    Assign
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
-
