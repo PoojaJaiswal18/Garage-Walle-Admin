@@ -2,9 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { db } from '../firebase';
 import { collection, onSnapshot, updateDoc, doc } from 'firebase/firestore';
 import '../styles/Approvals.css';
+import OnboardingForm from '../components/OnboardingForm';
 
 export default function Approvals() {
   const [approvals, setApprovals] = useState([]);
+  const [selectedApproval, setSelectedApproval] = useState(null);
+  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'approvals'), (querySnapshot) => {
@@ -18,13 +21,19 @@ export default function Approvals() {
     return () => unsubscribe();
   }, []);
 
-  const handleApprove = async (id) => {
-    const approvalRef = doc(db, 'approvals', id);
+  const handleApprove = (approval) => {
+    setSelectedApproval(approval);
+    setShowForm(true);
+  };
+
+  const handleFormSubmit = async (data) => {
+    const approvalRef = doc(db, 'approvals', selectedApproval.id);
     await updateDoc(approvalRef, { isApproved: true });
+    setShowForm(false);
   };
 
   return (
-    <div className="approvals-page">
+    <div className={`approvals-page ${showForm ? 'dimmed' : ''}`}>
       <div className="approvals-title">Approvals</div>
       {approvals.length === 0 ? (
         <p>No approvals available.</p>
@@ -38,7 +47,7 @@ export default function Approvals() {
             <div className="header-item">Is Approved</div>
             <div className="header-item">Location</div>
             <div className="header-item">Owner Phone Number</div>
-            <div className="header-item">Approve</div> {/* New column */}
+            <div className="header-item">Approve</div>
           </div>
           <ul className="approvals-list">
             {approvals.map(approval => (
@@ -52,7 +61,7 @@ export default function Approvals() {
                 <div className="approval-item-cell">{approval.ownerPhoneNumber}</div>
                 <div className="approval-item-cell">
                   <button 
-                    onClick={() => handleApprove(approval.id)} 
+                    onClick={() => handleApprove(approval)} 
                     disabled={approval.isApproved}
                     className="approve-button"
                   >
@@ -64,6 +73,14 @@ export default function Approvals() {
           </ul>
         </div>
       )}
+      {showForm && (
+        <OnboardingForm 
+          approval={selectedApproval}
+          onSubmit={handleFormSubmit}
+          onCancel={() => setShowForm(false)}
+        />
+      )}
     </div>
   );
 }
+
