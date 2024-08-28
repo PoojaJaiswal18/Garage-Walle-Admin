@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { db } from '../firebase';
-import { collection, doc, updateDoc, arrayUnion, arrayRemove, deleteField, onSnapshot } from 'firebase/firestore';
+import { collection, doc, onSnapshot, updateDoc, arrayUnion, arrayRemove, writeBatch } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Orders.css';
 
@@ -54,27 +54,30 @@ export default function Orders() {
 
   const toggleSurveyorAssigned = async (garageId, bookingId, isAssigned, surveyorId) => {
     try {
-      const bookingDoc = doc(db, 'garages', garageId, 'bookings', bookingId);
-      const surveyorDoc = doc(db, 'surveyors', surveyorId);
+      const bookingDocRef = doc(db, 'garages', garageId, 'bookings', bookingId);
+      const surveyorDocRef = doc(db, 'surveyors', surveyorId);
+
+      const batch = writeBatch(db);
 
       if (isAssigned) {
-        await updateDoc(bookingDoc, {
+        batch.update(bookingDocRef, {
           isSurveyorAssigned: false,
           surveyorId: deleteField(),
         });
-        await updateDoc(surveyorDoc, {
-          ongoingBookings: arrayRemove(bookingId), // Remove bookingId from ongoingBookings array
+        batch.update(surveyorDocRef, {
+          ongoingBookings: arrayRemove(bookingDocRef), // Remove reference from ongoingBookings
         });
       } else {
-        await updateDoc(bookingDoc, {
+        batch.update(bookingDocRef, {
           isSurveyorAssigned: true,
-          surveyorId,
+          surveyorId: bookingDocRef, // Store the reference
         });
-        await updateDoc(surveyorDoc, {
-          ongoingBookings: arrayUnion(bookingId), // Append bookingId to ongoingBookings array
+        batch.update(surveyorDocRef, {
+          ongoingBookings: arrayUnion(bookingDocRef), // Add reference to ongoingBookings
         });
       }
 
+      await batch.commit();
       setOrders(prevOrders => prevOrders.map(order =>
         order.id === bookingId ? { ...order, isSurveyorAssigned: !isAssigned } : order
       ));
@@ -130,7 +133,5 @@ export default function Orders() {
     </div>
   );
 }
-
-
 
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { db } from '../firebase';
-import { collection, doc, onSnapshot, getDoc, updateDoc, deleteField } from 'firebase/firestore';
+import { collection, doc, onSnapshot, getDoc, updateDoc, deleteField, arrayUnion, arrayRemove, writeBatch } from 'firebase/firestore';
 import { useLocation, useNavigate } from 'react-router-dom';
 import '../styles/SurveyorList.css';
 
@@ -78,30 +78,33 @@ export default function SurveyorList() {
 
   const handleAssign = async (surveyorId) => {
     try {
-      const orderDoc = doc(db, `garages/${garageId}/bookings`, orderId);
-      const surveyorDoc = doc(db, 'surveyors', surveyorId);
+      const orderDocRef = doc(db, `garages/${garageId}/bookings`, orderId);
+      const surveyorDocRef = doc(db, 'surveyors', surveyorId);
 
-      const orderSnap = await getDoc(orderDoc);
+      const orderSnap = await getDoc(orderDocRef);
       const orderData = orderSnap.data();
 
+      const batch = writeBatch(db);
+
       if (orderData.isSurveyorAssigned) {
-        await updateDoc(orderDoc, {
+        batch.update(orderDocRef, {
           isSurveyorAssigned: false,
           surveyorId: deleteField(),
         });
-        await updateDoc(surveyorDoc, {
-          ongoingBookings: deleteField(),
+        batch.update(surveyorDocRef, {
+          ongoingBookings: arrayRemove(orderDocRef), // Remove reference from ongoingBookings
         });
       } else {
-        await updateDoc(orderDoc, {
+        batch.update(orderDocRef, {
           isSurveyorAssigned: true,
-          surveyorId,
+          surveyorId: orderDocRef, // Store the reference
         });
-        await updateDoc(surveyorDoc, {
-          ongoingBookings: [orderId],
+        batch.update(surveyorDocRef, {
+          ongoingBookings: arrayUnion(orderDocRef), // Add reference to ongoingBookings
         });
       }
 
+      await batch.commit();
       navigate('/orders');
     } catch (error) {
       console.error("Error assigning surveyor:", error);
@@ -146,3 +149,5 @@ export default function SurveyorList() {
     </div>
   );
 }
+
+
