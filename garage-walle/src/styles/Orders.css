@@ -1,13 +1,14 @@
 .orders-page {
-  padding: 20px;
+  padding: 7px;
   font-family: 'Roboto', sans-serif;
   position: relative;
 }
 
 .orders-title {
-  background-color: #ffcba4; 
+  background-color: #F3656B; 
+  color: #f8f8f8;
   padding: 20px 30px; 
-  border-radius: 15px;
+  border-radius: 15px 15px 0 0;
   position: relative;
   top: 37px; 
   left: 50%;
@@ -23,21 +24,22 @@
   border-radius: 15px;
   overflow: hidden;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  background: white; /* Ensure table is on top of other elements */
-  padding-top: 25px; /* Provide space for the title overlap */
+  background: white; 
+  padding-top: 25px;
 }
 
 .orders-header {
   display: flex;
+  margin: 2px;
   background-color: #f8f8f8;
   font-weight: bold;
-  border-bottom: 1px solid #ddd;
-  padding-top: 25px; /* Provide space for the title overlap */
+  border-bottom:  solid #ddd;
+  padding: 30px 10px 15px 10px; 
 }
 
 .header-item {
   flex: 1;
-  padding: 15px 20px;
+  padding: 20px 20px;
   text-align: center;
   border-right: 1px solid #ddd;
 }
@@ -63,7 +65,7 @@
 
 .order-item-cell {
   flex: 1;
-  padding: 15px 20px;
+  padding: 20px 20px;
   text-align: center;
 }
 
