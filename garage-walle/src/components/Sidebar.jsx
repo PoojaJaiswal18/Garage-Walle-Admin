@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './Sidebar.css'; // Import CSS
 import { FaHome, FaListUl, FaClipboardList, FaMoneyBillWave, FaCheckCircle } from 'react-icons/fa'; // React Icons
+import logo from '../assets/logo.png'; // Adjust the path based on your folder structure
 
 export default function Sidebar() {
   const [expanded, setExpanded] = useState(true);
@@ -9,9 +10,15 @@ export default function Sidebar() {
   return (
     <aside className={`sidebar ${expanded ? 'expanded' : 'collapsed'}`}>
       <div className="sidebar-header">
-        <button onClick={() => setExpanded(prev => !prev)} className="toggle-button">
-          {expanded ? '<' : '>'}
-        </button>
+        <div className={`logo-container ${expanded ? 'expanded' : 'collapsed'}`}>
+          <img 
+            src={logo} 
+            alt="Company Logo" 
+            className={`logo ${expanded ? 'expanded' : 'collapsed'}`}
+            onClick={() => setExpanded(prev => !prev)}
+          />
+          {expanded && <span className="logo-text">Garage Walle</span>}
+        </div>
       </div>
       <nav className="sidebar-nav">
         <ul>
