@@ -28,7 +28,17 @@ export default function Approvals() {
 
   const handleFormSubmit = async (data) => {
     const approvalRef = doc(db, 'approvals', selectedApproval.id);
+    const userRef = doc(db, 'users', selectedApproval.appliedByUser);
+
+    // Update the approval document
     await updateDoc(approvalRef, { isApproved: true });
+
+    // Update the user's document
+    await updateDoc(userRef, {
+      isApproved: true,
+      isFlagged: false
+    });
+
     setShowForm(false);
   };
 
@@ -83,4 +93,3 @@ export default function Approvals() {
     </div>
   );
 }
-
