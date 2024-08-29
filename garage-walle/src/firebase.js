@@ -14,11 +14,11 @@ const firebaseConfig = {
   measurementId: "G-XT6XP5612Y"
 };
 
-// Initialize Firebase
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const analytics = getAnalytics(app);
 
-const storage = getStorage(app); // Initialize storage
+const storage = getStorage(app); 
 
-export { db, storage }; // Export storage
+export { db, storage };

@@ -94,7 +94,6 @@ export default function Orders() {
       ) : (
         <div className="orders-table">
           <div className="orders-header">
-            <div className="header-item">Order ID</div>
             <div className="header-item">Garage Name</div>
             <div className="header-item">Garage Location</div>
             <div className="header-item">Assigning Status</div>
@@ -103,7 +102,6 @@ export default function Orders() {
           <ul className="orders-list">
             {orders.map(order => (
               <li key={order.id} className="order-item">
-                <div className="order-item-cell">{order.id}</div>
                 <div className="order-item-cell">{order.garageName}</div>
                 <div className="order-item-cell">
                   {order.garageLocation.latitude}, {order.garageLocation.longitude}
