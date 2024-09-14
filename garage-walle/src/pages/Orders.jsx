@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { db } from '../firebase';
-import { collection, doc, onSnapshot, updateDoc, arrayUnion, arrayRemove, writeBatch } from 'firebase/firestore';
+import { collection, doc, onSnapshot, updateDoc, arrayUnion, arrayRemove, writeBatch, deleteField } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Orders.css';
 
@@ -62,7 +62,7 @@ export default function Orders() {
       if (isAssigned) {
         batch.update(bookingDocRef, {
           isSurveyorAssigned: false,
-          surveyorId: deleteField(),
+          surveyorId: deleteField(), // Remove the surveyorId from booking
         });
         batch.update(surveyorDocRef, {
           ongoingBookings: arrayRemove(bookingDocRef), // Remove reference from ongoingBookings
@@ -70,7 +70,7 @@ export default function Orders() {
       } else {
         batch.update(bookingDocRef, {
           isSurveyorAssigned: true,
-          surveyorId: bookingDocRef, // Store the reference
+          surveyorId: surveyorId, // Store the surveyorId in booking
         });
         batch.update(surveyorDocRef, {
           ongoingBookings: arrayUnion(bookingDocRef), // Add reference to ongoingBookings

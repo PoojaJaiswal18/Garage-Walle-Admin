@@ -17,19 +17,18 @@ export default function OnboardingForm({ approval, onSubmit, onCancel }) {
     dob: '',
     panCard: [],
     passportSizePhoto: [],
-    excelSheet: []
+    excelSheet: [],
+    ...(isSurveyor ? {} : {
+      workExperience: '',
+      workshopName: '',
+      boardSize: '',
+      workingHours: '',
+      weeklyOff: [],
+      workingBrand: [],
+      oilBrand: [],
+      shopPhotos: []
+    })
   });
-
-  if (!isSurveyor) {
-    formData.workExperience = '';
-    formData.workshopName = '';
-    formData.boardSize = '';
-    formData.workingHours = '';
-    formData.weeklyOff = [];
-    formData.workingBrand = [];
-    formData.oilBrand = [];
-    formData.shopPhotos = [];
-  }
 
   const [loading, setLoading] = useState(false);
 

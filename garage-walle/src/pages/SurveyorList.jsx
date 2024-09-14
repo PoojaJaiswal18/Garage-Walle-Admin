@@ -89,7 +89,7 @@ export default function SurveyorList() {
       if (orderData.isSurveyorAssigned) {
         batch.update(orderDocRef, {
           isSurveyorAssigned: false,
-          surveyorId: deleteField(),
+          surveyorId: deleteField(), // Remove the surveyorId from the booking
         });
         batch.update(surveyorDocRef, {
           ongoingBookings: arrayRemove(orderDocRef), // Remove reference from ongoingBookings
@@ -97,7 +97,7 @@ export default function SurveyorList() {
       } else {
         batch.update(orderDocRef, {
           isSurveyorAssigned: true,
-          surveyorId: orderDocRef, // Store the reference
+          surveyorId: surveyorId, // Store the surveyorId in the booking
         });
         batch.update(surveyorDocRef, {
           ongoingBookings: arrayUnion(orderDocRef), // Add reference to ongoingBookings
@@ -107,12 +107,12 @@ export default function SurveyorList() {
       await batch.commit();
       navigate('/orders');
     } catch (error) {
-      console.error("Error assigning surveyor:", error);
+      console.error('Error assigning surveyor:', error);
     }
   };
 
   return (
-    <div className="surveyor-list">
+    <div className="surveyors-page">
       <div className="surveyors-title">Surveyors List</div>
       {surveyors.length === 0 ? (
         <p>No surveyors available.</p>
@@ -121,28 +121,38 @@ export default function SurveyorList() {
           <div className="surveyors-header">
             <div className="header-item">Surveyor Name</div>
             <div className="header-item">Location</div>
-            {showDistance && <div className="header-item">Distance</div>}
+            {showDistance && <div className="header-item">Distance (km)</div>}
             <div className="header-item">Assign</div>
           </div>
           <ul className="surveyors-list">
-            {surveyors.map(surveyor => (
-              <li key={surveyor.id} className="surveyor-item">
-                <div className="surveyor-item-cell">{surveyor.name}</div>
-                <div className="surveyor-item-cell">
-                  {surveyor.location.latitude}, {surveyor.location.longitude}
-                </div>
-                {showDistance && (
+            {surveyors.map(surveyor => {
+              const distance = showDistance
+                ? getDistanceFromLatLonInKm(
+                    garageLocation.latitude,
+                    garageLocation.longitude,
+                    surveyor.location.latitude,
+                    surveyor.location.longitude
+                  ).toFixed(2)
+                : null;
+
+              return (
+                <li key={surveyor.id} className="surveyor-item">
+                  <div className="surveyor-item-cell">{surveyor.name}</div>
                   <div className="surveyor-item-cell">
-                    {garageLocation ? `${getDistanceFromLatLonInKm(garageLocation.latitude, garageLocation.longitude, surveyor.location.latitude, surveyor.location.longitude).toFixed(2)} km` : 'N/A'}
+                    {surveyor.location.latitude}, {surveyor.location.longitude}
                   </div>
-                )}
-                <div className="surveyor-item-cell">
-                  <button className="assign-button" onClick={() => handleAssign(surveyor.id)}>
-                    Assign
-                  </button>
-                </div>
-              </li>
-            ))}
+                  {showDistance && <div className="surveyor-item-cell">{distance} km</div>}
+                  <div className="surveyor-item-cell">
+                    <button
+                      className="assign-surveyor"
+                      onClick={() => handleAssign(surveyor.id)}
+                    >
+                      Assign
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
