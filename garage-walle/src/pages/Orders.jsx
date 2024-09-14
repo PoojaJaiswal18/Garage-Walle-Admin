@@ -20,12 +20,15 @@ export default function Orders() {
         return onSnapshot(bookingsCollection, (bookingsSnapshot) => {
           const bookingsData = [];
           bookingsSnapshot.forEach(bookingDoc => {
+            const bookingData = bookingDoc.data();
             bookingsData.push({
               id: bookingDoc.id,
-              ...bookingDoc.data(),
+              ...bookingData,
               garageName: garageDoc.data().name,
               garageLocation: garageDoc.data().location,
               garageId: garageDoc.id, // Add garageId for easy reference
+              customerName: bookingData.bookedBy, // Add customerName
+              customerAddress: bookingData.bookingLocationAddress // Add customerAddress
             });
           });
 
@@ -94,6 +97,8 @@ export default function Orders() {
       ) : (
         <div className="orders-table">
           <div className="orders-header">
+            <div className="header-item">Customer Name</div>
+            <div className="header-item">Customer Address</div>
             <div className="header-item">Garage Name</div>
             <div className="header-item">Garage Location</div>
             <div className="header-item">Assigning Status</div>
@@ -102,6 +107,8 @@ export default function Orders() {
           <ul className="orders-list">
             {orders.map(order => (
               <li key={order.id} className="order-item">
+                <div className="order-item-cell">{order.customerName}</div>
+                <div className="order-item-cell">{order.customerAddress}</div>
                 <div className="order-item-cell">{order.garageName}</div>
                 <div className="order-item-cell">
                   {order.garageLocation.latitude}, {order.garageLocation.longitude}
@@ -131,5 +138,3 @@ export default function Orders() {
     </div>
   );
 }
-
-
