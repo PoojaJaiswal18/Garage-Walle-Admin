@@ -1,0 +1,115 @@
+/* BillingPage container */
+.billing-page {
+  padding: 7px;
+  font-family: 'Roboto', sans-serif;
+  position: relative;
+}
+
+/* Title styling */
+.billing-title {
+  background-color: #F3656B;
+  color: #f8f8f8;
+  padding: 20px 30px;
+  border-radius: 15px 15px 0 0;
+  position: relative;
+  top: 37px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 20px;
+  font-weight: bold;
+  z-index: 1;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Table container */
+.billing-table {
+  display: flex;
+  flex-direction: column;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background: white;
+  padding-top: 25px;
+}
+
+/* Table header styling */
+.billing-header {
+  display: flex;
+  background-color: #f8f8f8;
+  font-weight: bold;
+  border-bottom: solid #ddd;
+  padding: 30px 10px 15px 10px;
+}
+
+.header-item {
+  flex: 1;
+  padding: 20px 20px;
+  text-align: center;
+  border-right: 1px solid #ddd;
+}
+
+.header-item:last-child {
+  border-right: none;
+}
+
+/* List of billing items */
+.billing-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Individual billing item */
+.billing-item {
+  display: flex;
+  border-bottom: 1px solid #ddd;
+}
+
+.billing-item:last-child {
+  border-bottom: none;
+}
+
+.billing-item-cell {
+  flex: 1;
+  padding: 20px 20px;
+  text-align: center;
+}
+
+.billing-item:hover {
+  background-color: #f9f9f9;
+}
+
+/* Checkbox styling */
+.is-paid-checkbox {
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+.is-paid-checkbox.Mui-checked {
+  color: green;
+}
+
+.is-paid-checkbox.Mui-checked.Mui-disabled {
+  color: red;
+}
+
+/* Additional Styles for the Material-UI Table */
+.MuiTableCell-root {
+  padding: 16px;
+}
+
+.MuiTableHead-root {
+  background-color: #f8f8f8;
+}
+
+.MuiTableRow-root {
+  border-bottom: 1px solid #ddd;
+}
+
+.MuiTableRow-root:last-child {
+  border-bottom: none;
+}
+
+.MuiDialog-paper {
+  border-radius: 15px;
+}
