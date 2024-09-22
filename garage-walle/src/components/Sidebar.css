@@ -167,3 +167,36 @@
   font-weight: bold;
   color: #F3656B;
 }
+
+
+
+.sidebar-footer {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  border-top: 1px solid #ddd;
+  justify-content: center;
+}
+
+.profile-section {
+  display: flex;
+  align-items: center;
+}
+
+.profile-icon {
+  font-size: 24px;
+  color: #F3656B;
+}
+
+.login-button {
+  background: none;
+  border: none;
+  color: #F3656B;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.profile-info {
+  margin-left: 12px;
+  font-size: 16px;
+}

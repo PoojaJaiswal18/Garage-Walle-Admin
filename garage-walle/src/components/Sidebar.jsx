@@ -1,11 +1,19 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import './Sidebar.css'; // Import CSS
-import { FaHome, FaListUl, FaClipboardList, FaMoneyBillWave, FaCheckCircle } from 'react-icons/fa'; // React Icons
-import logo from '../assets/logo.png'; // Adjust the path based on your folder structure
+import { FaHome, FaListUl, FaClipboardList, FaMoneyBillWave, FaCheckCircle, FaUser } from 'react-icons/fa';
+import './Sidebar.css'; 
+import logo from '../assets/logo.png';
+import LoginForm from './LoginForm'; // Import the login form component
 
 export default function Sidebar() {
   const [expanded, setExpanded] = useState(true);
+  const [user, setUser] = useState(null); // To track the logged-in user
+  const [showLoginModal, setShowLoginModal] = useState(false); // For showing the login modal
+
+  const handleLogin = (username) => {
+    setUser({ name: username });
+    setShowLoginModal(false); // Close the modal after login
+  };
 
   return (
     <aside className={`sidebar ${expanded ? 'expanded' : 'collapsed'}`}>
@@ -30,7 +38,22 @@ export default function Sidebar() {
         </ul>
       </nav>
       <div className="sidebar-footer">
+        <div className="profile-section">
+          <FaUser className="profile-icon" />
+          {expanded && (
+            <div className="profile-info">
+              {user ? (
+                <span>{user.name}</span>
+              ) : (
+                <button className="login-button" onClick={() => setShowLoginModal(true)}>
+                  Log in
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
+      {showLoginModal && <LoginForm onLogin={handleLogin} onClose={() => setShowLoginModal(false)} />}
     </aside>
   );
 }
