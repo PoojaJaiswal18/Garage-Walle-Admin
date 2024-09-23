@@ -71,9 +71,10 @@ export default function OnboardingForm({ approval, onSubmit, onCancel }) {
     });
   };
 
+  // Update this function to store vehicle data in the "garages" collection
   const createVehicleDocuments = async (docId, vehicleData) => {
     const vehiclePromises = vehicleData.map(async ({ name, power, services }) => {
-      const vehicleDocRef = doc(db, `garageInformation/${docId}/vehicles/${name}-${power}`);
+      const vehicleDocRef = doc(db, `garages/${docId}/vehicles/${name}-${power}`);
       await setDoc(vehicleDocRef, {
         name,
         power,
@@ -155,7 +156,8 @@ export default function OnboardingForm({ approval, onSubmit, onCancel }) {
           }
         }
 
-        await createVehicleDocuments(docRef.id, vehicleData);
+        // Store vehicle data in the "garages" collection using the approval's document ID
+        await createVehicleDocuments(approval.id, vehicleData);
       }
 
       setLoading(false);
@@ -285,7 +287,7 @@ export default function OnboardingForm({ approval, onSubmit, onCancel }) {
               <div className="form-group">
                 <label>Weekly Off</label>
                 <div>
-                  {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'All Day Working'].map(day => (
+                  {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => (
                     <label key={day} className="checkbox-label">
                       <input
                         type="checkbox"
@@ -302,7 +304,7 @@ export default function OnboardingForm({ approval, onSubmit, onCancel }) {
               <div className="form-group">
                 <label>Working Brand</label>
                 <div>
-                  {['Aprilia', 'Bajaj', 'Hero', 'Honda', 'KTM', 'Mahindra', 'Royal Enfield', 'Suzuki', 'TVS', 'Vespa', 'Yamaha'].map(brand => (
+                  {['Brand1', 'Brand2', 'Brand3'].map(brand => (
                     <label key={brand} className="checkbox-label">
                       <input
                         type="checkbox"
@@ -319,16 +321,16 @@ export default function OnboardingForm({ approval, onSubmit, onCancel }) {
               <div className="form-group">
                 <label>Oil Brand</label>
                 <div>
-                  {['Castrol', 'Motul', 'Shell', 'Gulf', 'Mobil', 'Others'].map(brand => (
-                    <label key={brand} className="checkbox-label">
+                  {['Oil1', 'Oil2', 'Oil3'].map(oil => (
+                    <label key={oil} className="checkbox-label">
                       <input
                         type="checkbox"
                         name="oilBrand"
-                        value={brand}
-                        checked={formData.oilBrand.includes(brand)}
+                        value={oil}
+                        checked={formData.oilBrand.includes(oil)}
                         onChange={handleChange}
                       />
-                      {brand}
+                      {oil}
                     </label>
                   ))}
                 </div>
@@ -338,7 +340,6 @@ export default function OnboardingForm({ approval, onSubmit, onCancel }) {
                 <input
                   type="file"
                   name="shopPhotos"
-                  accept="image/*"
                   multiple
                   onChange={handleChange}
                 />
@@ -350,7 +351,6 @@ export default function OnboardingForm({ approval, onSubmit, onCancel }) {
             <input
               type="file"
               name="aadharCard"
-              accept="image/*"
               multiple
               onChange={handleChange}
               required
@@ -361,7 +361,6 @@ export default function OnboardingForm({ approval, onSubmit, onCancel }) {
             <input
               type="file"
               name="panCard"
-              accept="image/*"
               multiple
               onChange={handleChange}
               required
@@ -372,27 +371,29 @@ export default function OnboardingForm({ approval, onSubmit, onCancel }) {
             <input
               type="file"
               name="passportSizePhoto"
-              accept="image/*"
               multiple
               onChange={handleChange}
               required
             />
           </div>
-          <div className="form-group">
-            <label>Excel Sheet</label>
-            <input
-              type="file"
-              name="excelSheet"
-              accept=".xlsx"
-              onChange={handleChange}
-              required={!isSurveyor}
-            />
-          </div>
-          <div className="form-buttons">
+          {!isSurveyor && (
+            <div className="form-group">
+              <label>Upload Excel Sheet (Vehicle Data)</label>
+              <input
+                type="file"
+                name="excelSheet"
+                accept=".xlsx, .xls"
+                onChange={handleChange}
+              />
+            </div>
+          )}
+          <div className="form-actions">
             <button type="submit" disabled={loading}>
               {loading ? 'Submitting...' : 'Submit'}
             </button>
-            <button type="button" onClick={onCancel}>Cancel</button>
+            <button type="button" onClick={onCancel}>
+              Cancel
+            </button>
           </div>
         </form>
       </div>
