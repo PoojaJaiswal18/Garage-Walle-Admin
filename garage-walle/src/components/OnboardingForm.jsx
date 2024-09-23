@@ -1,20 +1,18 @@
 import React, { useState } from 'react';
-import { db, storage } from '../firebase'; // Import db and storage from your firebase configuration
-import { addDoc, collection, doc, setDoc, GeoPoint } from 'firebase/firestore'; // Import necessary Firestore functions
+import { db, storage } from '../firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { addDoc, collection, doc, setDoc } from 'firebase/firestore';
+import * as XLSX from 'xlsx';
 import '../styles/OnboardingForm.css';
 
 export default function OnboardingForm({ approval, onSubmit, onCancel }) {
   const isSurveyor = approval.appliedFor === 'Surveyor';
 
-  const [formData, setFormData] = useState({
+  const initialState = {
     technicianName: '',
     mobileNumber: '',
-    workshopAddress: '',
-    landmark: '',
-    pincode: '',
+    dob: '', // Date of Birth field
     aadharCard: [],
-    dob: '',
     panCard: [],
     passportSizePhoto: [],
     excelSheet: [],
@@ -26,14 +24,18 @@ export default function OnboardingForm({ approval, onSubmit, onCancel }) {
       weeklyOff: [],
       workingBrand: [],
       oilBrand: [],
-      shopPhotos: []
+      shopPhotos: [],
+      workshopAddress: '',  // For garage
+      landmark: '',         // For garage
+      pincode: ''           // For garage
     })
-  });
+  };
 
+  const [formData, setFormData] = useState(initialState);
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    const { name, value, type, checked, files } = e.target;
+    const { name, type, checked, value, files } = e.target;
     if (type === 'file') {
       setFormData(prev => ({ ...prev, [name]: files }));
     } else if (type === 'checkbox') {
@@ -41,32 +43,50 @@ export default function OnboardingForm({ approval, onSubmit, onCancel }) {
         ...prev,
         [name]: checked ? [...prev[name], value] : prev[name].filter(item => item !== value)
       }));
-    } else if (type === 'radio') {
-      setFormData(prev => ({ ...prev, [name]: value }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
 
   const uploadFiles = async (files) => {
-    const uploadPromises = [];
-    for (const file of files) {
+    const uploadPromises = Array.from(files).map(file => {
       const storageRef = ref(storage, `uploads/${file.name}-${Date.now()}`);
-      const uploadTask = uploadBytes(storageRef, file).then(snapshot => getDownloadURL(snapshot.ref));
-      uploadPromises.push(uploadTask);
-    }
+      return uploadBytes(storageRef, file).then(snapshot => getDownloadURL(snapshot.ref));
+    });
     return Promise.all(uploadPromises);
   };
 
-  const createAdditionalDocument = async (collectionName, docId, data) => {
-    await setDoc(doc(db, collectionName, docId), data);
+  const parseExcel = async (file) => {
+    const reader = new FileReader();
+    return new Promise((resolve, reject) => {
+      reader.onload = (e) => {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        resolve(jsonData);
+      };
+      reader.onerror = (err) => reject(err);
+      reader.readAsArrayBuffer(file);
+    });
+  };
+
+  const createVehicleDocuments = async (docId, vehicleData) => {
+    const vehiclePromises = vehicleData.map(async ({ name, power, services }) => {
+      const vehicleDocRef = doc(db, `garageInformation/${docId}/vehicles/${name}-${power}`);
+      await setDoc(vehicleDocRef, {
+        name,
+        power,
+        services: services || {}  // Ensure services is an object, even if empty
+      });
+    });
+    return Promise.all(vehiclePromises);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      // Upload files and get URLs
       const aadharCardURLs = await uploadFiles(Array.from(formData.aadharCard));
       const panCardURLs = await uploadFiles(Array.from(formData.panCard));
       const passportSizePhotoURLs = await uploadFiles(Array.from(formData.passportSizePhoto));
@@ -85,42 +105,59 @@ export default function OnboardingForm({ approval, onSubmit, onCancel }) {
           weeklyOff: formData.weeklyOff,
           workingBrand: formData.workingBrand,
           oilBrand: formData.oilBrand,
-          shopPhotos: shopPhotosURLs
+          shopPhotos: shopPhotosURLs,
+          workshopAddress: formData.workshopAddress,
+          landmark: formData.landmark,
+          pincode: formData.pincode
         };
       }
 
-      // Prepare the data to store in Firestore
       const dataToStore = {
-        ...formData,
-        ...otherData,
+        technicianName: formData.technicianName,
+        mobileNumber: formData.mobileNumber,
+        dob: formData.dob, // Adding Date of Birth to Firestore
         aadharCard: aadharCardURLs,
         panCard: panCardURLs,
         passportSizePhoto: passportSizePhotoURLs,
         excelSheet: excelSheetURLs,
         approvalId: approval.id,
+        ...otherData
       };
 
-      // Add a new document to the appropriate collection
       const collectionName = isSurveyor ? 'surveyorInformation' : 'garageInformation';
       const docRef = await addDoc(collection(db, collectionName), dataToStore);
 
-      // Create additional document in 'garages' or 'surveyors' collection
-      if (isSurveyor) {
-        await createAdditionalDocument('surveyors', approval.id, {
-          location: new GeoPoint(41.878113, -87.629799),
-          name: 'alex',
-          ongoingBookings: [""]
-        });
-      } else {
-        await createAdditionalDocument('garages', approval.id, {
-          location: new GeoPoint(47.774929, -72.419418),
-          name: 'gar1'
-        });
-        // Optionally, create a sub-collection 'bookings'
-        await setDoc(doc(db, 'garages', approval.id, 'bookings', 'dummyBooking'), {});
+      if (!isSurveyor && formData.excelSheet.length > 0) {
+        const excelFile = formData.excelSheet[0];
+        const parsedData = await parseExcel(excelFile);
+        const servicesRow = parsedData.slice(2).map(row => row[0]);
+        const vehicleData = [];
+
+        for (let col = 1; col < parsedData[0].length; col++) {
+          const vehicleName = parsedData[1][col];
+          const power = parsedData[0][col];
+          const services = {};
+
+          for (let row = 2; row < parsedData.length; row++) {
+            const serviceName = servicesRow[row - 2];
+            const price = parsedData[row][col];
+            if (serviceName && price !== undefined) {
+              services[serviceName] = price;
+            }
+          }
+
+          if (vehicleName) {
+            vehicleData.push({
+              name: vehicleName,
+              power: `${power}`,
+              services: Object.keys(services).length > 0 ? services : {}
+            });
+          }
+        }
+
+        await createVehicleDocuments(docRef.id, vehicleData);
       }
 
-      // Close the form and notify success
       setLoading(false);
       onSubmit();
       alert('Onboarding form submitted successfully.');
@@ -156,8 +193,48 @@ export default function OnboardingForm({ approval, onSubmit, onCancel }) {
               required
             />
           </div>
+          <div className="form-group">
+            <label>Date of Birth</label>
+            <input
+              type="date"
+              name="dob"
+              value={formData.dob}
+              onChange={handleChange}
+              required
+            />
+          </div>
           {!isSurveyor && (
             <>
+              <div className="form-group">
+                <label>Workshop Address</label>
+                <input
+                  type="text"
+                  name="workshopAddress"
+                  value={formData.workshopAddress}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Landmark</label>
+                <input
+                  type="text"
+                  name="landmark"
+                  value={formData.landmark}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Pincode</label>
+                <input
+                  type="text"
+                  name="pincode"
+                  value={formData.pincode}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
               <div className="form-group">
                 <label>Work Experience</label>
                 <div>
@@ -242,7 +319,7 @@ export default function OnboardingForm({ approval, onSubmit, onCancel }) {
               <div className="form-group">
                 <label>Oil Brand</label>
                 <div>
-                  {['Castrol', 'Mobil', 'Shell', 'Gulf', 'Total', 'Petronas'].map(brand => (
+                  {['Castrol', 'Motul', 'Shell', 'Gulf', 'Mobil', 'Others'].map(brand => (
                     <label key={brand} className="checkbox-label">
                       <input
                         type="checkbox"
@@ -261,6 +338,7 @@ export default function OnboardingForm({ approval, onSubmit, onCancel }) {
                 <input
                   type="file"
                   name="shopPhotos"
+                  accept="image/*"
                   multiple
                   onChange={handleChange}
                 />
@@ -268,50 +346,12 @@ export default function OnboardingForm({ approval, onSubmit, onCancel }) {
             </>
           )}
           <div className="form-group">
-            <label>{isSurveyor ? 'Address' : 'Workshop Address'}</label>
-            <input
-              type="text"
-              name="workshopAddress"
-              value={formData.workshopAddress}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Landmark</label>
-            <input
-              type="text"
-              name="landmark"
-              value={formData.landmark}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Pincode</label>
-            <input
-              type="text"
-              name="pincode"
-              value={formData.pincode}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="form-group">
             <label>Aadhar Card</label>
             <input
               type="file"
               name="aadharCard"
+              accept="image/*"
               multiple
-              onChange={handleChange}
-            />
-          </div>
-          <div className="form-group">
-            <label>Date of Birth</label>
-            <input
-              type="date"
-              name="dob"
-              value={formData.dob}
               onChange={handleChange}
               required
             />
@@ -321,8 +361,10 @@ export default function OnboardingForm({ approval, onSubmit, onCancel }) {
             <input
               type="file"
               name="panCard"
+              accept="image/*"
               multiple
               onChange={handleChange}
+              required
             />
           </div>
           <div className="form-group">
@@ -330,8 +372,10 @@ export default function OnboardingForm({ approval, onSubmit, onCancel }) {
             <input
               type="file"
               name="passportSizePhoto"
+              accept="image/*"
               multiple
               onChange={handleChange}
+              required
             />
           </div>
           <div className="form-group">
@@ -339,11 +383,12 @@ export default function OnboardingForm({ approval, onSubmit, onCancel }) {
             <input
               type="file"
               name="excelSheet"
-              multiple
+              accept=".xlsx"
               onChange={handleChange}
+              required={!isSurveyor}
             />
           </div>
-          <div className="form-actions">
+          <div className="form-buttons">
             <button type="submit" disabled={loading}>
               {loading ? 'Submitting...' : 'Submit'}
             </button>
