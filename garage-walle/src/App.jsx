@@ -9,6 +9,7 @@ import Billing from "./pages/Billing";
 import MechanicList from './pages/MechanicList'; 
 import MechanicBookings from './pages/MechanicBookings'; 
 import Approvals from "./pages/Approvals";
+import BillApproval from "./pages/BillApproval.jsx";
 import './App.css'; 
 
 function App() {
@@ -23,9 +24,10 @@ function App() {
             <Route path="/surveyors" element={<SurveyorList />} />
             <Route path="/billing" element={<Billing />} />
             <Route path="/mechanic-list" element={<MechanicList />} />
-            <Route path="/mechanics" element={<MechanicList />} /> {/* Changed from "/mechanic-list" */}
+            <Route path="/mechanics" element={<MechanicList />} /> 
             <Route path="/mechanic-bookings" element={<MechanicBookings />} />
             <Route path="/approvals" element={<Approvals />} />
+            <Route path="/bill-approval" element={<BillApproval />} />
           </Routes>
         </div>
       </div>

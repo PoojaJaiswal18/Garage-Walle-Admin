@@ -1,100 +1,107 @@
 .approvals-page {
-  padding: 7px;
-  font-family: 'Roboto', sans-serif;
-  position: relative;
+  padding: 20px;
+  font-family: 'Inter', sans-serif;
+  box-sizing: border-box;
 }
 
 .approvals-title {
-  background-color: #F3656B;
-  color: #f8f8f8;
-  padding: 20px 30px;
-  border-radius: 15px 15px 0 0;
-  position: relative;
-  top: 37px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 20px;
-  font-weight: bold;
-  z-index: 1;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  text-align: center;
+  color: #000;
+  font-size: 36px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+  margin-bottom: 20px;
+  text-align: left;
+  padding-left: 25px;
 }
 
 .approvals-table {
   display: flex;
   flex-direction: column;
-  border-radius: 15px;
-  overflow: hidden;
+  gap: 15px;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 20px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  background: white;
-  padding-top: 25px;
+  background-color: #f8f8f8;
+  border-radius: 10px;
+  overflow-x: auto;
+}
+
+.approvals-header,
+.approval-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  border-radius: 7px;
+  border: 1px solid #EEEFF2;
+  background-color: #FFF;
+  opacity: 0.9;
+  padding: 5px 10px;
+  min-width: 800px; /* Ensure minimum width for horizontal scrolling */
 }
 
 .approvals-header {
-  display: flex;
-  margin: 2px;
-  background-color: #f8f8f8;
   font-weight: bold;
-  border-bottom: solid #ddd;
-  padding: 30px 10px 15px 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: #FFF;
 }
 
-.header-item {
+.header-item,
+.approval-item-cell {
   flex: 1;
-  padding: 20px 20px;
   text-align: center;
-  border-right: 1px solid #ddd;
-}
-
-.header-item:last-child {
-  border-right: none;
-}
-
-.approvals-list {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
+  font-size: 14px;
+  padding: 10px 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .approval-item {
-  display: flex;
-  border-bottom: 1px solid #ddd;
-}
-
-.approval-item:last-child {
-  border-bottom: none;
-}
-
-.approval-item-cell {
-  flex: 1;
-  padding: 20px 20px;
-  text-align: center;
-}
-
-.approval-item:hover {
-  background-color: #f9f9f9;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: #FFF;
 }
 
 .approve-button {
-  background-color: #007bff;
-  padding: 10px 15px;
-  color: white;
-  border: 2px solid #007bff;
+  background: none;
+  border: none;
   cursor: pointer;
+  display: inline-block;
+  position: relative;
+  padding: 0;
+}
+
+.action-menu {
+  position: relative;
+  cursor: pointer;
+  font-size: 24px;
+}
+
+.action-menu-icon {
+  display: inline-block;
+  cursor: pointer;
+  color: #000;
+}
+
+.dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   border-radius: 5px;
-  transition: color 0.3s ease, border-color 0.3s ease;
-  font-size: 16px;
+  z-index: 1;
 }
 
-.approve-button:disabled {
-  color: #ccc;
-  border-color: #ccc;
-  cursor: not-allowed;
+.dropdown-item {
+  padding: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
-.approve-button:hover:not(:disabled) {
-  color: #0056b3;
-  border-color: #0056b3;
+.dropdown-item:hover {
+  background-color: #f9f9f9;
 }
 
 .no-approvals {
@@ -103,81 +110,40 @@
   color: #888;
   padding: 20px;
 }
-/* Dialog Box Overlay */
-.dialog-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.3); /* Semi-transparent background */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000; /* Ensures it's above all other elements */
-}
 
-/* Dialog Box */
-.dialog-box {
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3); /* Subtle shadow */
-  width: 400px;
-  max-width: 90%; /* Responsive width */
-  padding: 20px;
-  animation: scaleIn 0.2s ease-in-out; /* Smooth scale-in animation */
-}
+/* Rest of the CSS remains the same as in the previous version */
 
-/* Dialog Box Text */
-.dialog-box p {
-  font-size: 16px;
-  color: #333;
-  margin-bottom: 20px;
-}
-
-/* Dialog Box Buttons */
-.dialog-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-/* Buttons */
-.dialog-buttons button {
-  font-size: 14px;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.dialog-buttons button:first-child {
-  background-color: #1a73e8; 
-  color: #fff;
-}
-
-.dialog-buttons button:first-child:hover {
-  background-color: #0c63d6; 
-}
-
-.dialog-buttons button:last-child {
-  background-color: #f1f3f4; 
-  color: #3c4043;
-}
-
-.dialog-buttons button:last-child:hover {
-  background-color: #dadce0;
-}
-
-
-@keyframes scaleIn {
-  from {
-    transform: scale(0.8);
-    opacity: 0;
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .approvals-title {
+    font-size: 32px;
   }
-  to {
-    transform: scale(1);
-    opacity: 1;
+
+  .approvals-header,
+  .approval-item {
+    min-width: 600px;
+  }
+}
+
+@media (max-width: 768px) {
+  .approvals-title {
+    font-size: 28px;
+    padding-left: 10px;
+  }
+
+  .approvals-table {
+    max-width: 100%;
+    padding: 10px;
+  }
+
+  .approvals-header,
+  .approval-item {
+    min-width: 400px;
+  }
+
+  .header-item,
+  .approval-item-cell {
+    font-size: 12px;
+    padding: 8px;
   }
 }

@@ -1,0 +1,144 @@
+.bill-approval-page {
+    padding: 20px;
+    font-family: 'Inter', sans-serif;
+    box-sizing: border-box;
+  }
+  
+  .bill-approval-title {
+    color: #000;
+    font-size: 36px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+    margin-bottom: 20px;
+    text-align: left;
+    padding-left: 25px;
+  }
+  
+  .bill-approval-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #f8f8f8;
+    border-radius: 10px;
+    overflow-x: auto;
+  }
+  
+  .bill-approval-header,
+  .bill-approval-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    align-items: center;
+    border-radius: 7px;
+    border: 1px solid #EEEFF2;
+    background-color: #FFF;
+    opacity: 0.9;
+    padding: 5px 10px;
+  }
+  
+  .bill-approval-header {
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: #FFF;
+  }
+  
+  .header-item,
+  .bill-approval-cell {
+    text-align: center;
+    font-size: 14px;
+    padding: 10px 15px;
+  }
+  
+  .bill-approval-row {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: #FFF;
+  }
+  
+  .approve-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: inline-block;
+    position: relative;
+    padding: 0;
+  }
+  
+  .action-menu {
+    position: relative;
+    cursor: pointer;
+    font-size: 24px;
+  }
+  
+  .action-menu-icon {
+    display: inline-block;
+    cursor: pointer;
+    color: #000;
+  }
+  
+  .dropdown {
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    z-index: 1;
+  }
+  
+  
+  
+  .dropdown-item {
+    padding: 10px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .dropdown-item:hover {
+    background-color: #f9f9f9;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 1024px) {
+    .bill-approval-title {
+      font-size: 32px;
+    }
+  
+    .bill-approval-header,
+    .bill-approval-row {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .bill-approval-title {
+      font-size: 28px;
+      padding-left: 10px;
+    }
+  
+    .bill-approval-container {
+      max-width: 100%;
+      padding: 10px;
+    }
+  
+    .bill-approval-header,
+    .bill-approval-row {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  
+    .header-item,
+    .bill-approval-cell {
+      font-size: 12px;
+      padding: 8px;
+    }
+  
+    .bill-approval-row {
+      flex-direction: column;
+      height: auto;
+      padding: 8px;
+    }
+  }

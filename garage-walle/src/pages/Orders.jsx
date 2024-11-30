@@ -20,27 +20,27 @@ export default function Orders() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Reference to the admin/bookings document
+
     const adminBookingsRef = doc(db, 'admin', 'bookings');
 
-    // Listen for changes in the currentBookings array
+
     const unsubscribe = onSnapshot(adminBookingsRef, async (adminBookingsDoc) => {
       try {
         const currentBookings = adminBookingsDoc.data()?.currentBookings || [];
 
-        // Fetch details for each booking reference
+
         const bookingsPromises = currentBookings.map(async (bookingRef) => {
           try {
-            // Safely get the booking document
+          
             const bookingDoc = await getDoc(bookingRef);
             
             if (bookingDoc.exists()) {
               const bookingData = bookingDoc.data();
               
-              // Extract garage ID from the booking reference
+          
               const garageId = bookingRef.parent.parent.id;
 
-              // Fetch associated garage details
+           
               const garageRef = doc(db, 'garages', garageId);
               const garageDoc = await getDoc(garageRef);
               const garageData = garageDoc.exists() ? garageDoc.data() : {};
@@ -63,10 +63,10 @@ export default function Orders() {
           }
         });
 
-        // Resolve all promises and filter out any null values
+      
         const bookingsData = (await Promise.all(bookingsPromises)).filter(booking => booking !== null);
 
-        // Update orders state
+        
         setOrders(bookingsData);
       } catch (error) {
         console.error('Error fetching bookings:', error);
@@ -77,7 +77,7 @@ export default function Orders() {
       setOrders([]);
     });
 
-    // Cleanup subscription
+
     return () => unsubscribe();
   }, []);
 
