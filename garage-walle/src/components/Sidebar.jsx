@@ -19,12 +19,12 @@ export default function Sidebar() {
     <aside className={`sidebar ${expanded ? 'expanded' : 'collapsed'}`}>
       <div className="sidebar-header">
         <div className={`logo-container ${expanded ? 'expanded' : 'collapsed'}`}>
-          <img 
+          {/* <img 
             src={logo} 
             alt="Company Logo" 
             className={`logo ${expanded ? 'expanded' : 'collapsed'}`}
             onClick={() => setExpanded(prev => !prev)}
-          />
+          /> */}
           {expanded && <span className="logo-text">Garage Walle</span>}
         </div>
       </div>

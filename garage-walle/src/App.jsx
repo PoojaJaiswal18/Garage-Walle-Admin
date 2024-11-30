@@ -10,6 +10,8 @@ import MechanicList from './pages/MechanicList';
 import MechanicBookings from './pages/MechanicBookings'; 
 import Approvals from "./pages/Approvals";
 import BillApproval from "./pages/BillApproval.jsx";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import './App.css'; 
 
 function App() {
