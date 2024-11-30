@@ -27,11 +27,18 @@ export default function SurveyorList() {
   const orderId = new URLSearchParams(location.search).get('orderId');
   const garageId = new URLSearchParams(location.search).get('garageId');
   const [garageLocation, setGarageLocation] = useState(null);
-  const showDistance = Boolean(orderId && garageId);
+  const showDistance = Boolean(orderId && garageId);  // Show distance and "Assign" button if navigating from order
 
   useEffect(() => {
     const unsubscribeSurveyors = onSnapshot(collection(db, 'surveyors'), (querySnapshot) => {
-      const surveyorsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const surveyorsData = querySnapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        // Filter out surveyors without a valid location
+        .filter(surveyor => 
+          surveyor.location && 
+          surveyor.location.latitude !== undefined && 
+          surveyor.location.longitude !== undefined
+        );
 
       if (garageLocation && showDistance) {
         surveyorsData.sort((a, b) => {
@@ -61,11 +68,21 @@ export default function SurveyorList() {
     if (orderId && garageId) {
       const unsubscribeOrder = onSnapshot(doc(db, `garages/${garageId}/bookings`, orderId), async (orderDoc) => {
         if (orderDoc.exists()) {
-          const orderData = orderDoc.data();
           const garageDoc = await getDoc(doc(db, 'garages', garageId));
           if (garageDoc.exists()) {
             const garageData = garageDoc.data();
-            setGarageLocation(garageData.location);
+            // Add safety check for location
+            if (garageData.location && 
+                garageData.location.latitude !== undefined && 
+                garageData.location.longitude !== undefined) {
+              setGarageLocation(garageData.location);
+            } else {
+              console.warn("Garage location is incomplete");
+              setGarageLocation(null);
+            }
+          } else {
+            console.error("Garage document does not exist");
+            setGarageLocation(null);
           }
         } else {
           console.error("Order does not exist");
@@ -81,28 +98,18 @@ export default function SurveyorList() {
       const orderDocRef = doc(db, `garages/${garageId}/bookings`, orderId);
       const surveyorDocRef = doc(db, 'surveyors', surveyorId);
 
-      const orderSnap = await getDoc(orderDocRef);
-      const orderData = orderSnap.data();
-
       const batch = writeBatch(db);
 
-      if (orderData.isSurveyorAssigned) {
-        batch.update(orderDocRef, {
-          isSurveyorAssigned: false,
-          surveyorId: deleteField(), // Remove the surveyorId from the booking
-        });
-        batch.update(surveyorDocRef, {
-          ongoingBookings: arrayRemove(orderDocRef), // Remove reference from ongoingBookings
-        });
-      } else {
-        batch.update(orderDocRef, {
-          isSurveyorAssigned: true,
-          surveyorId: surveyorId, // Store the surveyorId in the booking
-        });
-        batch.update(surveyorDocRef, {
-          ongoingBookings: arrayUnion(orderDocRef), // Add reference to ongoingBookings
-        });
-      }
+      // Update the booking to mark it as assigned
+      batch.update(orderDocRef, {
+        isSurveyorAssigned: true,
+        surveyorId: surveyorId,
+      });
+
+      // Add the booking reference to surveyor's ongoing bookings
+      batch.update(surveyorDocRef, {
+        ongoingBookings: arrayUnion(orderDocRef),
+      });
 
       await batch.commit();
       navigate('/orders');
@@ -122,11 +129,15 @@ export default function SurveyorList() {
             <div className="header-item">Surveyor Name</div>
             <div className="header-item">Location</div>
             {showDistance && <div className="header-item">Distance (km)</div>}
-            <div className="header-item">Assign</div>
+            {showDistance && <div className="header-item">Assign</div>}
           </div>
           <ul className="surveyors-list">
             {surveyors.map(surveyor => {
-              const distance = showDistance
+              // Only calculate distance if both garage and surveyor locations are valid
+              const distance = (showDistance && garageLocation && 
+                surveyor.location && 
+                surveyor.location.latitude !== undefined && 
+                surveyor.location.longitude !== undefined)
                 ? getDistanceFromLatLonInKm(
                     garageLocation.latitude,
                     garageLocation.longitude,
@@ -137,19 +148,27 @@ export default function SurveyorList() {
 
               return (
                 <li key={surveyor.id} className="surveyor-item">
-                  <div className="surveyor-item-cell">{surveyor.name}</div>
+                  <div className="surveyor-item-cell">{surveyor.name || 'Unnamed Surveyor'}</div>
                   <div className="surveyor-item-cell">
-                    {surveyor.location.latitude}, {surveyor.location.longitude}
+                    {surveyor.location 
+                      ? `${surveyor.location.latitude || 'N/A'}, ${surveyor.location.longitude || 'N/A'}` 
+                      : 'No Location'}
                   </div>
-                  {showDistance && <div className="surveyor-item-cell">{distance} km</div>}
-                  <div className="surveyor-item-cell">
-                    <button
-                      className="assign-surveyor"
-                      onClick={() => handleAssign(surveyor.id)}
-                    >
-                      Assign
-                    </button>
-                  </div>
+                  {showDistance && (
+                    <div className="surveyor-item-cell">
+                      {distance ? `${distance} km` : 'N/A'}
+                    </div>
+                  )}
+                  {showDistance && (
+                    <div className="surveyor-item-cell">
+                      <button
+                        className="assign-surveyor"
+                        onClick={() => handleAssign(surveyor.id)}
+                      >
+                        Assign
+                      </button>
+                    </div>
+                  )}
                 </li>
               );
             })}
@@ -159,5 +178,3 @@ export default function SurveyorList() {
     </div>
   );
 }
-
-

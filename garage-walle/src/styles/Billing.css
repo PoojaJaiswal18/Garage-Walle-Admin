@@ -1,99 +1,28 @@
 /* BillingPage container */
-.billing-page {
-  padding: 7px;
-  font-family: 'Roboto', sans-serif;
-  position: relative;
+
+/* Settlement Buttons Container */
+.settlement-buttons {
+  display: flex;
+  gap: 15px; /* Add gap between the buttons */
+  margin-bottom: 20px; /* Add space below the buttons */
+  justify-content: flex-start; /* Align buttons to the left */
 }
 
-/* Title styling */
-.billing-title {
-  background-color: #F3656B;
-  color: #f8f8f8;
-  padding: 20px 30px;
-  border-radius: 15px 15px 0 0;
-  position: relative;
-  top: 37px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 20px;
+/* Button styling */
+.settlement-buttons .MuiButton-root {
+  background-color: #F3656B; /* Button color */
+  color: white;
   font-weight: bold;
-  z-index: 1;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 10px 20px;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
 }
 
-/* Table container */
-.billing-table {
-  display: flex;
-  flex-direction: column;
-  border-radius: 15px;
-  overflow: hidden;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  background: white;
-  padding-top: 25px;
+.settlement-buttons .MuiButton-root:hover {
+  background-color: #E04A53; /* Darker shade of #F3656B for hover effect */
 }
 
-/* Table header styling */
-.billing-header {
-  display: flex;
-  background-color: #f8f8f8;
-  font-weight: bold;
-  border-bottom: solid #ddd;
-  padding: 30px 10px 15px 10px;
-}
-
-.header-item {
-  flex: 1;
-  padding: 20px 20px;
-  text-align: center;
-  border-right: 1px solid #ddd;
-}
-
-.header-item:last-child {
-  border-right: none;
-}
-
-/* List of billing items */
-.billing-list {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-}
-
-/* Individual billing item */
-.billing-item {
-  display: flex;
-  border-bottom: 1px solid #ddd;
-}
-
-.billing-item:last-child {
-  border-bottom: none;
-}
-
-.billing-item-cell {
-  flex: 1;
-  padding: 20px 20px;
-  text-align: center;
-}
-
-.billing-item:hover {
-  background-color: #f9f9f9;
-}
-
-/* Checkbox styling */
-.is-paid-checkbox {
-  padding: 5px 10px;
-  border-radius: 5px;
-}
-
-.is-paid-checkbox.Mui-checked {
-  color: green;
-}
-
-.is-paid-checkbox.Mui-checked.Mui-disabled {
-  color: red;
-}
-
-/* Additional Styles for the Material-UI Table */
+/* Material-UI Table Styling */
 .MuiTableCell-root {
   padding: 16px;
 }
@@ -110,6 +39,224 @@
   border-bottom: none;
 }
 
-.MuiDialog-paper {
-  border-radius: 15px;
+/* Dialog Close Button */
+.MuiDialogTitle-root .MuiIconButton-root {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+}
+
+/* Add some space between the date picker and the table */
+.billing-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* Add space between elements */
+  padding: 20px;
+  font-family: 'Inter', sans-serif;
+  box-sizing: border-box;
+}
+
+/* Adjusting the table container for better spacing */
+.billing-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #f8f8f8;
+  border-radius: 10px;
+  overflow-x: auto;
+}
+
+billing-page {
+  padding: 20px;
+  font-family: 'Inter', sans-serif;
+  box-sizing: border-box;
+}
+
+/* Title styling */
+.billing-title {
+  color: #000;
+  font-size: 36px;
+  font-weight: 500;
+  line-height: normal;
+  margin-bottom: 20px;
+  text-align: left;
+  padding-left: 25px;
+}
+
+/* Table container */
+.billing-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* Increased gap between list and buttons */
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #f8f8f8;
+  border-radius: 10px;
+  overflow-x: auto;
+}
+
+/* Table header styling */
+.billing-header,
+.billing-item {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 15px;
+  align-items: center;
+  border-radius: 7px;
+  border: 1px solid #EEEFF2;
+  background-color: #FFF;
+  opacity: 0.9;
+  padding: 5px 10px;
+}
+
+.billing-header {
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: #FFF;
+}
+
+/* Header and item cell styling */
+.header-item,
+.billing-item-cell {
+  text-align: center;
+  font-size: 14px;
+  padding: 10px 15px;
+}
+
+/* Hover effect for billing items */
+.billing-item:hover {
+  background-color: #f9f9f9;
+}
+
+/* Status badges */
+.status-active {
+  background-color: #FF6B6B;
+  color: white;
+  border-radius: 12px;
+  padding: 5px 10px;
+  text-align: center;
+}
+
+.status-pending {
+  background-color: #FFD93D;
+  color: white;
+  border-radius: 12px;
+  padding: 5px 10px;
+}
+
+.status-completed {
+  background-color: #32CD32;
+  color: white;
+  border-radius: 12px;
+  padding: 5px 10px;
+}
+
+/* Checkbox styling */
+.is-paid-checkbox {
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+.is-paid-checkbox.Mui-checked {
+  color: green;
+}
+
+.is-paid-checkbox.Mui-checked.Mui-disabled {
+  color: red;
+}
+
+
+.MuiTableHead-root {
+  background-color: #f8f8f8;
+}
+
+.MuiTableRow-root {
+  border-bottom: 1px solid #ddd;
+}
+
+.MuiTableRow-root:last-child {
+  border-bottom: none;
+}
+
+/* 3 Dots Icon */
+.action-menu {
+  position: relative;
+  cursor: pointer;
+  font-size: 24px;
+}
+
+.action-menu-icon {
+  display: inline-block;
+  cursor: pointer;
+}
+
+.dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  z-index: 1;
+}
+
+.action-menu:hover .dropdown {
+  display: block;
+}
+
+.dropdown-item {
+  padding: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.dropdown-item:hover {
+  background-color: #f9f9f9;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .billing-title {
+    font-size: 32px;
+  }
+
+  .billing-header,
+  .billing-item {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .billing-title {
+    font-size: 28px;
+    padding-left: 10px;
+  }
+
+  .billing-container {
+    max-width: 100%;
+    padding: 10px;
+  }
+
+  .billing-header,
+  .billing-item {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .header-item,
+  .billing-item-cell {
+    font-size: 12px;
+    padding: 8px;
+  }
+
+  .billing-item {
+    flex-direction: column;
+    height: auto;
+    padding: 8px;
+  }
 }

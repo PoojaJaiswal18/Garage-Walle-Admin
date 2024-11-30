@@ -1,3 +1,4 @@
+// App.js
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
@@ -5,8 +6,10 @@ import Home from "./pages/Home";
 import Orders from "./pages/Orders";
 import SurveyorList from "./pages/SurveyorList";
 import Billing from "./pages/Billing";
-import Approvals from "./pages/Approvals"; // Import the new Approvals page
-import './App.css'; // Import global styles
+import MechanicList from './pages/MechanicList'; 
+import MechanicBookings from './pages/MechanicBookings'; 
+import Approvals from "./pages/Approvals";
+import './App.css'; 
 
 function App() {
   return (
@@ -19,7 +22,10 @@ function App() {
             <Route path="/orders" element={<Orders />} />
             <Route path="/surveyors" element={<SurveyorList />} />
             <Route path="/billing" element={<Billing />} />
-            <Route path="/approvals" element={<Approvals />} /> {/* Add this line */}
+            <Route path="/mechanic-list" element={<MechanicList />} />
+            <Route path="/mechanics" element={<MechanicList />} /> {/* Changed from "/mechanic-list" */}
+            <Route path="/mechanic-bookings" element={<MechanicBookings />} />
+            <Route path="/approvals" element={<Approvals />} />
           </Routes>
         </div>
       </div>

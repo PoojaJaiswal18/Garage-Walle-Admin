@@ -1,0 +1,44 @@
+/* src/styles/MechanicList.css */
+
+.mechanic-list {
+  max-width: 800px;
+  margin: 0 auto;
+  font-family: 'Inter', sans-serif;
+}
+
+.mechanic-header {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr); /* Changed to 5 columns */
+  gap: 10px;
+  padding: 10px 15px;
+  font-weight: bold;
+  background-color: #f0f0f0;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.header-item {
+  text-align: center;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.mechanic-item {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr); /* Changed to 5 columns */
+  gap: 10px;
+  padding: 10px 15px;
+  border-bottom: 1px solid #ddd;
+}
+
+.mechanic-item > span {
+  text-align: center;
+}
+
+/* Optional: styling for alternating item colors */
+.mechanic-item:nth-child(odd) {
+  background-color: #f9f9f9;
+}
