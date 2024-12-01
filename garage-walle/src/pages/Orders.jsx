@@ -93,29 +93,34 @@ export default function Orders() {
 
   const handleAssignSurveyor = async () => {
     if (selectedOrder) {
-      // Navigate to surveyors page
+      // Simply navigate to surveyors page without modifying anything
       navigate(`/surveyors?orderId=${selectedOrder.id}&garageId=${selectedOrder.garageId}`);
-
-      // Reference to the admin/bookings document
-      const adminBookingsRef = doc(db, 'admin', 'bookings');
-      
-      try {
-        // Remove the booking reference from currentBookings
-        await updateDoc(adminBookingsRef, {
-          currentBookings: arrayRemove(selectedOrder.originalRef)
-        });
-
-        // Update the booking to mark surveyor as assigned
-        const bookingRef = selectedOrder.originalRef;
-        await updateDoc(bookingRef, {
-          isSurveyorAssigned: true
-        });
-      } catch (error) {
-        console.error("Error updating booking:", error);
-      }
     }
     handleCloseDialog();
   };
+  //     // Navigate to surveyors page
+  //     navigate(`/surveyors?orderId=${selectedOrder.id}&garageId=${selectedOrder.garageId}`);
+
+  //     // Reference to the admin/bookings document
+  //     const adminBookingsRef = doc(db, 'admin', 'bookings');
+      
+  //     try {
+  //       // Remove the booking reference from currentBookings
+  //       await updateDoc(adminBookingsRef, {
+  //         currentBookings: arrayRemove(selectedOrder.originalRef)
+  //       });
+
+  //       // Update the booking to mark surveyor as assigned
+  //       const bookingRef = selectedOrder.originalRef;
+  //       await updateDoc(bookingRef, {
+  //         isSurveyorAssigned: true
+  //       });
+  //     } catch (error) {
+  //       console.error("Error updating booking:", error);
+  //     }
+  //   }
+  //   handleCloseDialog();
+  // };
 
   return (
     <div className="orders-page">

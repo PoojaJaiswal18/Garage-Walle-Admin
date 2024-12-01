@@ -95,22 +95,28 @@ export default function SurveyorList() {
 
   const handleAssign = async (surveyorId) => {
     try {
+      const adminBookingsRef = doc(db, 'admin', 'bookings');
       const orderDocRef = doc(db, `garages/${garageId}/bookings`, orderId);
       const surveyorDocRef = doc(db, 'surveyors', surveyorId);
-
+  
       const batch = writeBatch(db);
-
+  
+      // Remove the booking reference from currentBookings
+      batch.update(adminBookingsRef, {
+        currentBookings: arrayRemove(orderDocRef)
+      });
+  
       // Update the booking to mark it as assigned
       batch.update(orderDocRef, {
         isSurveyorAssigned: true,
         surveyorId: surveyorId,
       });
-
+  
       // Add the booking reference to surveyor's ongoing bookings
       batch.update(surveyorDocRef, {
         ongoingBookings: arrayUnion(orderDocRef),
       });
-
+  
       await batch.commit();
       navigate('/orders');
     } catch (error) {
