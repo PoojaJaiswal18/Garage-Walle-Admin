@@ -130,42 +130,55 @@ export default function BillApproval() {
   
   const handleSubmitBill = async (e) => {
     e.preventDefault();
-
-   
+  
+    // Validate services
     const validServices = services.filter(
       service => service.service.trim() !== '' && service.amount.trim() !== ''
     );
-
+  
     if (validServices.length === 0) {
       toast.error('Please add at least one service');
       return;
     }
-
+  
     try {
-      
       const bookingRefPath = selectedBill.bookingRef.path;
-
+  
+      // Calculate total amounts
       const totalServiceAmount = validServices.reduce(
         (total, service) => total + parseFloat(service.amount), 0
       );
       const totalBillAmount = totalServiceAmount + platformFee + visitCharges;
-
-     
+  
+      // Create services array
       const billArray = validServices.map(service => ({
         name: service.service,
         cost: parseFloat(service.amount)
       }));
-
-      
+  
+      // Create additional charges array
+      const additionalCharges = [
+        {
+          name: "Platform Fees",
+          amount: platformFee
+        },
+        {
+          name: "Visit Charges", 
+          amount: visitCharges
+        }
+      ];
+  
+      // Update booking document
       const bookingDocRef = doc(db, bookingRefPath);
       await updateDoc(bookingDocRef, {
-        Bill: billArray,
+        bill: billArray, // Changed from Bill to bill
+        additionalCharges: additionalCharges, // Added additional charges
         billApproved: true,
         billRaised: true,
         billAmount: totalBillAmount
       });
-
-      // New update: Remove the bill from admin's billRaised collection
+  
+      // Remove the bill from admin's billRaised collection
       const adminDocRef = doc(db, 'admin', 'billRaised');
       await updateDoc(adminDocRef, {
         bills: arrayRemove({
@@ -173,7 +186,7 @@ export default function BillApproval() {
           image: selectedBill.image
         })
       });
-
+  
       // Update the local state to remove the processed bill
       setBills(prevBills => prevBills.filter(bill => 
         bill.bookingRef.path !== bookingRefPath
@@ -186,6 +199,7 @@ export default function BillApproval() {
       toast.error('Failed to submit bill. Please try again.');
     }
   };
+     
 
   
   const handleApproveClick = (bill) => {
