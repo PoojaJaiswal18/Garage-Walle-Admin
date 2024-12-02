@@ -5,9 +5,136 @@ import { addDoc, collection, doc, setDoc, getDoc } from 'firebase/firestore';
 import * as XLSX from 'xlsx';
 import '../styles/OnboardingForm.css';
 
+const initializeCollections = async (garageId, isGarage = false) => {
+  if (isGarage) {
+    try {
+      // Initialize ongoingBookings collection
+      const ongoingBookingsRef = collection(db, 'garages', garageId, 'ongoingBookings');
+      await addDoc(ongoingBookingsRef, { initialized: true });
+
+      // Initialize completedBookings collection
+      const completedBookingsRef = collection(db, 'garages', garageId, 'completedBookings');
+      await addDoc(completedBookingsRef, { initialized: true });
+    } catch (error) {
+      console.error('Error initializing collections:', error);
+      throw error;
+    }
+  }
+};
+
+const createDetailedVehicleDocuments = async (docId, vehicleData) => {
+  try {
+    const vehicleTypes = ['bikes', 'moped'];
+
+    for (const vehicleType of vehicleTypes) {
+      // Ensure the top-level vehicles document exists
+      const vehiclesRef = doc(db, 'garages', docId, 'vehicles', vehicleType);
+      await setDoc(vehiclesRef, { type: vehicleType }, { merge: true });
+
+      // Iterate through power ranges
+      for (const [powerRange, serviceData] of Object.entries(vehicleData[vehicleType])) {
+        const powerRangeRef = doc(db, 'garages', docId, 'vehicles', vehicleType, 'powerRanges', powerRange);
+        await setDoc(powerRangeRef, { powerRange }, { merge: true });
+
+        // Iterate through service types
+        for (const [serviceType, services] of Object.entries(serviceData)) {
+          const serviceRef = doc(
+            db,
+            'garages',
+            docId,
+            'vehicles',
+            vehicleType,
+            'powerRanges',
+            powerRange,
+            'services',
+            serviceType
+          );
+
+          // Set service-specific data
+          await setDoc(serviceRef, services, { merge: true });
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error creating vehicle documents:', error);
+    throw error;
+  }
+};
+
+const parseExcel = async (file) => {
+  try {
+    const reader = new FileReader();
+    return new Promise((resolve, reject) => {
+      reader.onload = async (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+          const vehicleTypes = {
+            bikes: ['100cc', '110cc', '125cc', '135cc', '150cc', '160cc', '180cc', '200cc', '220cc', '310cc', '350cc', 'more than 350cc'],
+            moped: ['100cc', '110cc', '125cc', '150cc', 'more than 150cc'],
+          };
+
+          const parsedData = {
+            bikes: {},
+            moped: {},
+          };
+
+          const serviceTypes = ['generalServices', 'visitCharges', 'repairing'];
+          const serviceRowMappings = {
+            generalServices: [3, 4],
+            visitCharges: [7, 8],
+            repairing: [11, 22],
+          };
+
+          Object.keys(vehicleTypes).forEach(vehicleType => {
+            vehicleTypes[vehicleType].forEach(powerRange => {
+              parsedData[vehicleType][powerRange] = {};
+
+              serviceTypes.forEach(serviceType => {
+                const [row1, row2] = serviceRowMappings[serviceType];
+                const columnRanges = vehicleType === 'bikes' ? ['B', 'N'] : ['O', 'S'];
+
+                const headerRow = jsonData[1];
+                const columnIndex = Object.keys(headerRow).find(key =>
+                  headerRow[key] === powerRange &&
+                  key >= columnRanges[0] &&
+                  key <= columnRanges[1]
+                );
+
+                if (columnIndex !== undefined) {
+                  const serviceName1 = jsonData[row1 - 1][1];
+                  const serviceName2 = jsonData[row2 - 1][1];
+
+                  parsedData[vehicleType][powerRange][serviceType] = {
+                    [serviceName1]: { rate: jsonData[row1 - 1][columnIndex] || null },
+                    [serviceName2]: { rate: jsonData[row2 - 1][columnIndex] || null },
+                  };
+                }
+              });
+            });
+          });
+
+          resolve(parsedData);
+        } catch (error) {
+          console.error('Excel parsing error:', error);
+          reject(error);
+        }
+      };
+      reader.onerror = (err) => reject(err);
+      reader.readAsArrayBuffer(file);
+    });
+  } catch (error) {
+    console.error('Error parsing Excel:', error);
+    throw error;
+  }
+};
+
 export default function OnboardingForm({ approval, onSubmit, onCancel }) {
-  const isSurveyor = approval.appliedFor === 'SURVEYOR';
-  const isGarage = approval.appliedFor === 'GARAGE';
+  const isSurveyor = approval?.appliedFor === 'SURVEYOR';
+  const isGarage = approval?.appliedFor === 'GARAGE';
 
   const initialState = {
     technicianName: '',
@@ -18,19 +145,19 @@ export default function OnboardingForm({ approval, onSubmit, onCancel }) {
     passportSizePhoto: [],
     qrCode: [],
     excelSheet: [],
-    ...(isSurveyor ? {} : {
+    weeklyOff: [],
+    workingBrand: [],
+    oilBrand: [],
+    ...(isGarage ? {
       workExperience: '',
       workshopName: '',
       boardSize: '',
       workingHours: '',
-      weeklyOff: [],
-      workingBrand: [],
-      oilBrand: [],
-      shopPhotos: [],
       workshopAddress: '',
       landmark: '',
-      pincode: ''
-    })
+      pincode: '',
+      shopPhotos: []
+    } : {})
   };
 
   const [formData, setFormData] = useState(initialState);
@@ -38,100 +165,89 @@ export default function OnboardingForm({ approval, onSubmit, onCancel }) {
 
   const handleChange = (e) => {
     const { name, type, checked, value, files } = e.target;
+    
     if (type === 'file') {
-      setFormData(prev => ({ ...prev, [name]: files }));
-    } else if (type === 'checkbox') {
-      setFormData(prev => ({
-        ...prev,
-        [name]: checked ? [...prev[name], value] : prev[name].filter(item => item !== value)
+      setFormData(prev => ({ 
+        ...prev, 
+        [name]: files ? Array.from(files) : [] 
       }));
+    } else if (type === 'checkbox') {
+      setFormData(prev => {
+        const currentValues = prev[name] || []; 
+        return {
+          ...prev,
+          [name]: checked 
+            ? [...currentValues, value].filter((v, i, a) => a.indexOf(v) === i)
+            : currentValues.filter(item => item !== value)
+        };
+      });
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
 
   const uploadFiles = async (files) => {
-    const uploadPromises = Array.from(files).map(file => {
-      const storageRef = ref(storage, `uploads/${file.name}-${Date.now()}`);
-      return uploadBytes(storageRef, file).then(snapshot => getDownloadURL(snapshot.ref));
-    });
-    return Promise.all(uploadPromises);
-  };
-
-  const parseExcel = async (file) => {
-    const reader = new FileReader();
-    return new Promise((resolve, reject) => {
-      reader.onload = (e) => {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-        resolve(jsonData);
-      };
-      reader.onerror = (err) => reject(err);
-      reader.readAsArrayBuffer(file);
-    });
-  };
-
-  const createVehicleDocuments = async (docId, vehicleData) => {
-    const vehiclePromises = vehicleData.map(async ({ name, power, services }) => {
-      const vehicleDocRef = doc(db, `garages/${docId}/vehicles/${name}-${power}`);
-      await setDoc(vehicleDocRef, {
-        name,
-        power,
-        services: services || {}
+    try {
+      const uploadPromises = files.map(file => {
+        const storageRef = ref(storage, `uploads/${file.name}-${Date.now()}`);
+        return uploadBytes(storageRef, file).then(snapshot => getDownloadURL(snapshot.ref));
       });
-    });
-    return Promise.all(vehiclePromises);
-  };
-
-  const initializeCollections = async (docId, isGarage) => {
-    if (isGarage) {
-      // Initialize empty billing collection
-      await setDoc(doc(db, `garages/${docId}/billing/default`), {
-        created: new Date()
-      });
-
-      // Initialize empty bookings collection
-      await setDoc(doc(db, `garages/${docId}/bookings/default`), {
-        created: new Date()
-      });
+      return Promise.all(uploadPromises);
+    } catch (error) {
+      console.error('Error uploading files:', error);
+      throw error;
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!approval || !approval.id) {
+      alert('Invalid approval information');
+      return;
+    }
+
     setLoading(true);
+
     try {
-      // Get the approval document to access required fields
       const approvalDoc = await getDoc(doc(db, 'approvals', approval.id));
       const approvalData = approvalDoc.data();
 
-      const aadharCardURLs = await uploadFiles(Array.from(formData.aadharCard));
-      const panCardURLs = await uploadFiles(Array.from(formData.panCard));
-      const passportSizePhotoURLs = await uploadFiles(Array.from(formData.passportSizePhoto));
-      const excelSheetURLs = await uploadFiles(Array.from(formData.excelSheet));
-      const qrCodeURLs = await uploadFiles(Array.from(formData.qrCode));
+      const aadharCardURLs = await uploadFiles(formData.aadharCard || []);
+      const panCardURLs = await uploadFiles(formData.panCard || []);
+      const passportSizePhotoURLs = await uploadFiles(formData.passportSizePhoto || []);
+      const qrCodeURLs = await uploadFiles(formData.qrCode || []);
 
       let shopPhotosURLs = [];
+      let excelSheetURLs = [];
       let otherData = {};
 
-      if (!isSurveyor) {
-        shopPhotosURLs = await uploadFiles(Array.from(formData.shopPhotos));
+      if (isGarage) {
+        shopPhotosURLs = await uploadFiles(formData.shopPhotos || []);
+        
+        if (formData.excelSheet && formData.excelSheet.length > 0) {
+          excelSheetURLs = await uploadFiles(formData.excelSheet);
+          const excelFile = formData.excelSheet[0];
+          const parsedVehicleData = await parseExcel(excelFile);
+          await createDetailedVehicleDocuments(approval.id, parsedVehicleData);
+        }
+
         otherData = {
-          workExperience: formData.workExperience,
-          workshopName: formData.workshopName,
-          boardSize: formData.boardSize,
-          workingHours: formData.workingHours,
-          weeklyOff: formData.weeklyOff,
-          workingBrand: formData.workingBrand,
-          oilBrand: formData.oilBrand,
+          workExperience: formData.workExperience || '',
+          workshopName: formData.workshopName || '',
+          boardSize: formData.boardSize || '',
+          workingHours: formData.workingHours || '',
+          weeklyOff: formData.weeklyOff || [],
+          workingBrand: formData.workingBrand || [],
+          oilBrand: formData.oilBrand || [],
           shopPhotos: shopPhotosURLs,
+          workshopAddress: formData.workshopAddress || '',
+          landmark: formData.landmark || '',
+          pincode: formData.pincode || ''
         };
       }
 
       if (isSurveyor) {
-        // Create surveyor document
         await setDoc(doc(db, 'surveyors', approval.id), {
           name: approvalData.name,
           location: approvalData.location,
@@ -146,14 +262,12 @@ export default function OnboardingForm({ approval, onSubmit, onCancel }) {
           createdAt: new Date()
         });
       } else if (isGarage) {
-        // Create document in garages collection with only essential information
         await setDoc(doc(db, 'garages', approval.id), {
           name: approvalData.garageName,
           location: approvalData.location,
           phoneNumber: `+91${approvalData.ownerPhoneNumber}`,
         });
 
-        // Store complete information in garageInformation collection
         await setDoc(doc(db, 'garageInformation', approval.id), {
           technicianName: formData.technicianName,
           mobileNumber: formData.mobileNumber,
@@ -161,60 +275,29 @@ export default function OnboardingForm({ approval, onSubmit, onCancel }) {
           aadharCard: aadharCardURLs,
           panCard: panCardURLs,
           passportSizePhoto: passportSizePhotoURLs,
+          qrCode: qrCodeURLs,
           excelSheet: excelSheetURLs,
-          qrCode: qrCodeURLs, 
           approvalId: approval.id,
           ...otherData,
           createdAt: new Date()
         });
 
-        // Initialize sub-collections: billing, bookings, vehicles
         await initializeCollections(approval.id, true);
+      }
 
-        // Process Excel data if available
-        if (formData.excelSheet.length > 0) {
-          const excelFile = formData.excelSheet[0];
-          const parsedData = await parseExcel(excelFile);
-          const servicesRow = parsedData.slice(2).map(row => row[0]);
-          const vehicleData = [];
-
-          for (let col = 1; col < parsedData[0].length; col++) {
-            const vehicleName = parsedData[1][col];
-            const power = parsedData[0][col];
-            const services = {};
-
-            for (let row = 2; row < parsedData.length; row++) {
-              const serviceName = servicesRow[row - 2];
-              const price = parsedData[row][col];
-              if (serviceName && price !== undefined) {
-                services[serviceName] = price;
-              }
-            }
-
-            if (vehicleName) {
-              vehicleData.push({
-                name: vehicleName,
-                power: `${power}`,
-                services: Object.keys(services).length > 0 ? services : {}
-              });
-            }
-          }
-
-          await createVehicleDocuments(approval.id, vehicleData);
-        }
+      if (isGarage) {
+        await initializeCollections(approval.id, true);
       }
 
       setLoading(false);
       onSubmit();
       alert('Onboarding form submitted successfully.');
     } catch (error) {
-      console.error('Error adding document: ', error);
-      alert('Failed to submit the form. Please try again.');
+      console.error('Error submitting form: ', error);
+      alert(`Failed to submit the form: ${error.message}`);
       setLoading(false);
     }
   };
-
-  // Rest of the component remains exactly the same
   return (
     <div className="onboarding-form-wrapper">
       <div className="onboarding-form">
@@ -348,39 +431,39 @@ export default function OnboardingForm({ approval, onSubmit, onCancel }) {
                 </div>
               </div>
               <div className="form-group">
-                <label>Working Brand</label>
-                <div>
-                  {['Brand1', 'Brand2', 'Brand3'].map(brand => (
-                    <label key={brand} className="checkbox-label">
-                      <input
-                        type="checkbox"
-                        name="workingBrand"
-                        value={brand}
-                        checked={formData.workingBrand.includes(brand)}
-                        onChange={handleChange}
-                      />
-                      {brand}
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Oil Brand</label>
-                <div>
-                  {['Oil1', 'Oil2', 'Oil3'].map(oil => (
-                    <label key={oil} className="checkbox-label">
-                      <input
-                        type="checkbox"
-                        name="oilBrand"
-                        value={oil}
-                        checked={formData.oilBrand.includes(oil)}
-                        onChange={handleChange}
-                      />
-                      {oil}
-                    </label>
-                  ))}
-                </div>
-              </div>
+            <label>Working Brand</label>
+            <div>
+              {['APRILLIA', 'BAJAJ', 'HERO', 'HONDA', 'KTM', 'MAHINDRA', 'ROYAL ENFIELD', 'SUZUKI', 'TVS', 'VESPA', 'YAMAHA'].map((brand) => (
+                <label key={brand} className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    name="workingBrand"
+                    value={brand}
+                    checked={formData.workingBrand.includes(brand)}
+                    onChange={handleChange}
+                  />
+                  {brand}
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className="form-group">
+            <label>Oil Brand</label>
+            <div>
+              {['MOTUL', 'CASTROL', 'VEDOL', 'MOBIL', 'LIQUID GUN', 'OTHERS'].map((oil) => (
+                <label key={oil} className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    name="oilBrand"
+                    value={oil}
+                    checked={formData.oilBrand.includes(oil)}
+                    onChange={handleChange}
+                  />
+                  {oil}
+                </label>
+              ))}
+            </div>
+          </div>
               <div className="form-group">
                 <label>Shop Photos</label>
                 <input
@@ -432,15 +515,15 @@ export default function OnboardingForm({ approval, onSubmit, onCancel }) {
             />
           </div>
           {!isSurveyor && (
-            <div className="form-group">
-              <label>Upload Excel Sheet (Vehicle Data)</label>
-              <input
-                type="file"
-                name="excelSheet"
-                accept=".xlsx, .xls"
-                onChange={handleChange}
-              />
-            </div>
+           <div className="form-group">
+           <label>Upload Excel Sheet (Vehicle Data)</label>
+           <input
+             type="file"
+             name="excelSheet"
+             accept=".xlsx, .xls"
+             onChange={handleChange}
+           />
+         </div>
           )}
           <div className="form-actions">
             <button type="submit" disabled={loading}>
@@ -453,5 +536,5 @@ export default function OnboardingForm({ approval, onSubmit, onCancel }) {
         </form>
       </div>
     </div>
-  );
-}
+)
+};
